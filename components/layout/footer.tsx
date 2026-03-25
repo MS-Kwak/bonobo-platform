@@ -16,7 +16,7 @@ export function Footer() {
         <div className="grid gap-12 md:grid-cols-3">
           <div className="space-y-4">
             <Image
-              src="/bonobo-logo-footer.png"
+              src="/images/bonobo-logo-footer.png"
               alt="보노보플랫폼"
               width={140}
               height={36}
@@ -73,7 +73,7 @@ export function Footer() {
               <li className="flex items-start gap-2.5">
                 <MapPin className="size-4 mt-0.5 shrink-0 text-white/40" />
                 <span className="text-sm text-white/60">
-                  경기도 부천시 부일로 519(심곡동) 610호
+                  경기 부천시 부일로 519, 화신오피스텔 610호
                 </span>
               </li>
             </ul>

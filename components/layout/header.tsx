@@ -46,7 +46,7 @@ export function Header() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2">
           <Image
-            src="/bonobo-logo.png"
+            src="/images/bonobo-logo.png"
             alt="보노보플랫폼"
             width={140}
             height={36}
