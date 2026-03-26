@@ -1,20 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useInView } from 'react-intersection-observer';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Award,
-  Bell,
   CalendarDays,
   ChevronRight,
   Eye,
-  Megaphone,
+  FileText,
+  Loader2,
   PinOff,
   Pin,
+  Bookmark,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { noticeItems, type NoticeItem } from '@/data/notices';
+import type { NoticeItem } from '@/lib/api/notices';
 
 const ease: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
@@ -28,36 +29,96 @@ function formatDate(dateStr: string) {
 }
 
 function formatViews(n: number) {
-  if (n >= 10000) return `${(n / 10000).toFixed(1)}만`;
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}천`;
   return n.toLocaleString();
 }
 
-export function NoticeList() {
-  const [pinnedIds, setPinnedIds] = useState<Set<string>>(
+function stripHtml(html: string) {
+  return html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&[^;]+;/g, ' ')
+    .trim();
+}
+
+interface Props {
+  initialItems: NoticeItem[];
+  totalCount: number;
+  totalPages: number;
+}
+
+export function NoticeList({
+  initialItems,
+  totalCount,
+  totalPages,
+}: Props) {
+  const [items, setItems] = useState<NoticeItem[]>(initialItems);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(totalPages > 1);
+  const [pinnedIds, setPinnedIds] = useState<Set<number>>(
     () =>
-      new Set(noticeItems.filter((n) => n.pinned).map((n) => n.id)),
+      new Set(initialItems.filter((n) => n.pinned).map((n) => n.id)),
   );
 
-  const togglePin = (id: string, e: React.MouseEvent) => {
+  const loadMore = useCallback(async () => {
+    if (loading || !hasMore) return;
+    setLoading(true);
+
+    try {
+      const nextPage = page + 1;
+      const res = await fetch(`/api/notices?page=${nextPage}`);
+      const data = await res.json();
+
+      const newItems = data.items as NoticeItem[];
+      setItems((prev) => [...prev, ...newItems]);
+      setPinnedIds((prev) => {
+        const next = new Set(prev);
+        newItems
+          .filter((n: NoticeItem) => n.pinned)
+          .forEach((n: NoticeItem) => next.add(n.id));
+        return next;
+      });
+      setPage(nextPage);
+      setHasMore(nextPage < data.totalPages);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, loading, hasMore]);
+
+  const { ref: sentinelRef } = useInView({
+    threshold: 0,
+    rootMargin: '200px',
+    onChange: (inView) => {
+      if (inView) loadMore();
+    },
+  });
+
+  const togglePin = (id: number, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    const willPin = !pinnedIds.has(id);
+
     setPinnedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+
+    fetch('/api/notices/pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ psn: id, pinned: willPin }),
+    });
   };
 
-  const pinned = noticeItems.filter((n) => pinnedIds.has(n.id));
-  const rest = noticeItems.filter((n) => !pinnedIds.has(n.id));
+  const pinned = items.filter((n) => pinnedIds.has(n.id));
+  const rest = items.filter((n) => !pinnedIds.has(n.id));
+  const totalViews = items.reduce((sum, n) => sum + n.views, 0);
 
   return (
     <>
       {/* Hero */}
       <section className="relative overflow-hidden bg-primary pt-32 pb-10 lg:pt-40 lg:pb-16">
-        {/* Decorative background */}
         <div className="pointer-events-none absolute inset-0">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-35 mix-blend-luminosity"
@@ -94,85 +155,56 @@ export function NoticeList() {
               보노보플랫폼의 최신 소식과 성과를 전해드립니다
             </motion.p>
 
-            {/* Icon chips */}
+            {/* Stats chips */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.35, ease }}
-              className="mt-8 flex items-center gap-3"
+              transition={{ duration: 0.6, delay: 0.4, ease }}
+              className="mt-10 flex items-center gap-3"
             >
               {[
                 {
-                  icon: Bell,
-                  label: '소식',
-                  color: 'bg-blue-400/15 text-blue-300',
+                  icon: FileText,
+                  label: '총 게시글',
+                  value: totalCount,
+                  chip: 'bg-blue-400/15 text-blue-300',
                 },
                 {
-                  icon: Award,
-                  label: '인증',
-                  color: 'bg-amber-400/15 text-amber-300',
+                  icon: Bookmark,
+                  label: '고정됨',
+                  value: pinnedIds.size,
+                  chip: 'bg-amber-400/15 text-amber-300',
                 },
                 {
-                  icon: Megaphone,
-                  label: '공고',
-                  color: 'bg-emerald-400/15 text-emerald-300',
+                  icon: Eye,
+                  label: '총 조회수',
+                  value: totalViews.toLocaleString(),
+                  chip: 'bg-emerald-400/15 text-emerald-300',
                 },
-              ].map((item, i) => (
+              ].map((stat, i) => (
                 <motion.div
-                  key={item.label}
+                  key={stat.label}
                   initial={{ opacity: 0, scale: 0.8, y: 8 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   transition={{
                     duration: 0.4,
-                    delay: 0.4 + i * 0.08,
+                    delay: 0.45 + i * 0.08,
                     ease,
                   }}
                   className={cn(
                     'flex items-center gap-2 rounded-full px-4 py-2',
-                    item.color,
+                    stat.chip,
                   )}
                 >
-                  <item.icon className="size-4" strokeWidth={1.5} />
-                  <span className="text-sm font-medium">
-                    {item.label}
+                  <stat.icon className="size-4" strokeWidth={1.5} />
+                  <span className="text-xs font-medium">
+                    {stat.label}
+                  </span>
+                  <span className="font-heading text-sm font-bold">
+                    {stat.value}
                   </span>
                 </motion.div>
               ))}
-            </motion.div>
-
-            {/* Stats */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.55 }}
-              className="mt-10 flex items-center gap-8 text-sm"
-            >
-              <div className="flex flex-col items-center">
-                <span className="font-heading text-2xl font-bold text-white">
-                  {noticeItems.length}
-                </span>
-                <span className="text-xs text-white/40">
-                  총 게시글
-                </span>
-              </div>
-              <div className="h-8 w-px bg-white/10" />
-              <div className="flex flex-col items-center">
-                <span className="font-heading text-2xl font-bold text-white">
-                  {pinnedIds.size}
-                </span>
-                <span className="text-xs text-white/40">고정됨</span>
-              </div>
-              <div className="h-8 w-px bg-white/10" />
-              <div className="flex flex-col items-center">
-                <span className="font-heading text-2xl font-bold text-white">
-                  {noticeItems
-                    .reduce((sum, n) => sum + n.views, 0)
-                    .toLocaleString()}
-                </span>
-                <span className="text-xs text-white/40">
-                  총 조회수
-                </span>
-              </div>
             </motion.div>
           </div>
         </div>
@@ -209,6 +241,25 @@ export function NoticeList() {
               ))}
             </AnimatePresence>
           </div>
+
+          {/* Sentinel + Loading */}
+          {hasMore && (
+            <div
+              ref={sentinelRef}
+              className="flex justify-center py-12"
+            >
+              {loading && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex items-center gap-2 text-sm text-muted-foreground"
+                >
+                  <Loader2 className="size-4 animate-spin" />
+                  불러오는 중...
+                </motion.div>
+              )}
+            </div>
+          )}
         </div>
       </section>
     </>
@@ -222,6 +273,8 @@ function PinnedCard({
   item: NoticeItem;
   onUnpin: (e: React.MouseEvent) => void;
 }) {
+  const preview = stripHtml(item.content).slice(0, 200);
+
   return (
     <motion.div
       layout
@@ -232,7 +285,10 @@ function PinnedCard({
     >
       <Link
         href={`/notice/${item.id}`}
-        className="group relative block overflow-hidden rounded-2xl bg-primary/3 p-6 ring-1 ring-primary/10 transition-all duration-300 hover:bg-primary/6 hover:ring-primary/20 hover:shadow-lg sm:p-8"
+        className={cn(
+          'group relative block overflow-hidden rounded-2xl p-6 ring-1 transition-all duration-300 sm:p-8',
+          'bg-primary/3 ring-primary/10 hover:bg-primary/6 hover:ring-primary/20 hover:shadow-lg',
+        )}
       >
         <div className="flex items-start gap-3">
           <button
@@ -242,7 +298,7 @@ function PinnedCard({
             title="고정 해제"
           >
             <PinOff
-              className="size-4 text-primary transition-colors group-[:hover]:text-primary"
+              className="size-4 text-primary"
               strokeWidth={1.5}
             />
           </button>
@@ -251,20 +307,12 @@ function PinnedCard({
               <span className="shrink-0 rounded-full bg-primary px-2.5 py-0.5 text-xs font-bold text-white">
                 고정
               </span>
-              {item.tags?.map((tag) => (
-                <span
-                  key={tag}
-                  className="hidden rounded-full bg-primary/10 px-2.5 py-0.5 font-heading text-xs font-medium text-primary sm:inline-block"
-                >
-                  {tag}
-                </span>
-              ))}
             </div>
             <h3 className="mt-2 text-lg font-bold text-foreground transition-colors duration-200 group-hover:text-primary sm:text-xl">
               {item.title}
             </h3>
             <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-              {item.content}
+              {preview}
             </p>
             <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
@@ -305,18 +353,18 @@ function RegularRow({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
       exit={{ opacity: 0, height: 0, transition: { duration: 0.2 } }}
-      transition={{ duration: 0.5, delay: (index % 5) * 0.06, ease }}
+      transition={{ duration: 0.5, delay: (index % 10) * 0.04, ease }}
     >
       <div className="group flex items-center gap-4 py-5 sm:gap-6 sm:px-4 sm:rounded-xl">
         <div className="hidden shrink-0 sm:block">
           <div className="flex size-12 flex-col items-center justify-center rounded-xl bg-muted/60 font-heading text-xs leading-tight">
-            <span className="text-lg font-bold text-foreground">
-              {new Date(item.date).getDate()}
-            </span>
             <span className="text-muted-foreground">
               {new Date(item.date).toLocaleDateString('ko-KR', {
                 month: 'short',
               })}
+            </span>
+            <span className="text-lg font-bold text-foreground">
+              {new Date(item.date).getDate()}
             </span>
           </div>
         </div>
@@ -339,14 +387,6 @@ function RegularRow({
                 {formatViews(item.views)}
               </span>
             </span>
-            {item.tags?.map((tag) => (
-              <span
-                key={tag}
-                className="hidden rounded bg-muted px-1.5 py-0.5 font-heading text-xs text-muted-foreground sm:inline-block"
-              >
-                {tag}
-              </span>
-            ))}
           </div>
         </Link>
 

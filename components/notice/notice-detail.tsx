@@ -8,9 +8,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
+  Paperclip,
   User,
 } from 'lucide-react';
-import type { NoticeItem } from '@/data/notices';
+import type { NoticeItem } from '@/lib/api/notices';
 
 const ease: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
@@ -30,6 +31,9 @@ interface Props {
 }
 
 export function NoticeDetail({ item, prev, next }: Props) {
+  const isHtml =
+    item.content.includes('<') && item.content.includes('>');
+
   return (
     <>
       {/* Hero */}
@@ -73,18 +77,6 @@ export function NoticeDetail({ item, prev, next }: Props) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease }}
           >
-            {item.tags && item.tags.length > 0 && (
-              <div className="mb-4 flex flex-wrap gap-2">
-                {item.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-primary/10 px-3 py-1 font-heading text-xs font-medium text-primary"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
             <h1 className="text-2xl font-bold leading-snug text-foreground sm:text-3xl lg:text-4xl">
               {item.title}
             </h1>
@@ -117,12 +109,48 @@ export function NoticeDetail({ item, prev, next }: Props) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease }}
-            className="prose-base mt-10 max-w-none space-y-5 leading-relaxed text-foreground/80"
+            className="prose-base mt-10 max-w-none leading-relaxed text-foreground/80"
           >
-            {item.content.split('\n\n').map((paragraph, i) => (
-              <p key={i}>{paragraph}</p>
-            ))}
+            {isHtml ? (
+              <div
+                dangerouslySetInnerHTML={{ __html: item.content }}
+              />
+            ) : (
+              <div className="space-y-5">
+                {item.content.split('\n\n').map((paragraph, i) => (
+                  <p key={i}>{paragraph}</p>
+                ))}
+              </div>
+            )}
           </motion.div>
+
+          {/* Attachments */}
+          {item.attachments.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="mt-8 rounded-xl border border-border/50 p-4"
+            >
+              <p className="mb-3 flex items-center gap-1.5 text-sm font-medium text-foreground">
+                <Paperclip className="size-4" strokeWidth={1.5} />
+                첨부파일
+              </p>
+              <div className="space-y-2">
+                {item.attachments.map((file, i) => (
+                  <a
+                    key={i}
+                    href={file}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-sm text-primary underline-offset-2 hover:underline"
+                  >
+                    {file.split('/').pop()}
+                  </a>
+                ))}
+              </div>
+            </motion.div>
+          )}
 
           {/* Bottom back button */}
           <div className="mt-10 border-t border-border/50 pt-8">

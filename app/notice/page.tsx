@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { getNoticesPaginated } from '@/lib/api/notices';
 import { NoticeList } from '@/components/notice/notice-list';
 
 export const metadata: Metadata = {
@@ -6,6 +7,16 @@ export const metadata: Metadata = {
   description: '보노보플랫폼의 최신 소식과 공지사항을 확인하세요.',
 };
 
-export default function NoticePage() {
-  return <NoticeList />;
+export const dynamic = 'force-dynamic';
+
+export default async function NoticePage() {
+  const firstPage = await getNoticesPaginated(1);
+
+  return (
+    <NoticeList
+      initialItems={firstPage.items}
+      totalCount={firstPage.totalCount}
+      totalPages={firstPage.totalPages}
+    />
+  );
 }
