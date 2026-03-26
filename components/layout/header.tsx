@@ -83,8 +83,10 @@ export function Header() {
           <Link
             href="/contact"
             className={cn(
-              buttonVariants(),
-              isLight && 'bg-white text-primary hover:bg-white/90',
+              'inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-all',
+              isLight
+                ? 'bg-white text-primary hover:bg-white/80'
+                : 'bg-primary text-primary-foreground hover:bg-primary/80',
             )}
           >
             견적문의
