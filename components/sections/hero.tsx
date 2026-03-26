@@ -149,7 +149,7 @@ export function Hero() {
               'w-full sm:w-auto px-8 h-12 text-base',
             )}
           >
-            개발 실적 보기
+            포트폴리오 보기
           </Link>
         </motion.div>
 
