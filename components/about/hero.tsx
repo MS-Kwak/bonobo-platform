@@ -19,14 +19,14 @@ const fadeUp = {
 
 export function AboutHero() {
   return (
-    <section className="relative flex min-h-[60vh] items-center justify-center overflow-hidden">
+    <section className="relative flex items-center justify-center overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/images/bg01.png')" }}
       />
       <div className="absolute inset-0 bg-black/60" />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-6 py-32 text-center lg:px-8">
+      <div className="relative z-10 mx-auto max-w-7xl px-6 pt-32 pb-20 text-center lg:px-8 lg:pt-40 lg:pb-28">
         <motion.p
           variants={fadeUp}
           initial="hidden"

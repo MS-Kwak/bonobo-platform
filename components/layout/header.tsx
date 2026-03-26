@@ -14,7 +14,7 @@ const navItems = [
   { label: '공지사항', href: '/notice' },
 ];
 
-const darkHeroPages = ['/about'];
+const darkHeroPages = ['/about', '/notice'];
 
 export function Header() {
   const pathname = usePathname();
