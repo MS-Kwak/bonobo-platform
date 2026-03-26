@@ -184,7 +184,7 @@ export function ContactForm() {
               transition={{ duration: 0.7, delay: 0.1, ease }}
               className="mt-4 text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl lg:text-5xl"
             >
-              문의하기
+              견적문의
             </motion.h1>
           </div>
         </div>
