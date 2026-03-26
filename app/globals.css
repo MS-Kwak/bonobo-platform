@@ -147,4 +147,8 @@
   html {
     @apply font-sans;
   }
+  ::selection {
+    background: oklch(0.88 0.12 75);
+    color: oklch(0.2 0.02 265);
+  }
 }

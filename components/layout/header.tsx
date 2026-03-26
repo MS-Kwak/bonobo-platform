@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -13,9 +14,15 @@ const navItems = [
   { label: '공지사항', href: '/notice' },
 ];
 
+const darkHeroPages = ['/about'];
+
 export function Header() {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const hasDarkHero = darkHeroPages.includes(pathname);
+  const isLight = hasDarkHero && !scrolled && !mobileOpen;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -60,7 +67,12 @@ export function Header() {
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-lg px-4 py-2 text-sm font-medium text-foreground/60 transition-colors hover:text-foreground"
+              className={cn(
+                'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                isLight
+                  ? 'text-white/70 hover:text-white'
+                  : 'text-foreground/60 hover:text-foreground',
+              )}
             >
               {item.label}
             </Link>
@@ -68,14 +80,25 @@ export function Header() {
         </nav>
 
         <div className="hidden md:block">
-          <Link href="/contact" className={cn(buttonVariants())}>
+          <Link
+            href="/contact"
+            className={cn(
+              buttonVariants(),
+              isLight && 'bg-white text-primary hover:bg-white/90',
+            )}
+          >
             견적문의
           </Link>
         </div>
 
         <button
           type="button"
-          className="flex items-center justify-center rounded-lg p-2 text-foreground/70 transition-colors hover:text-foreground md:hidden"
+          className={cn(
+            'flex items-center justify-center rounded-lg p-2 transition-colors md:hidden',
+            isLight
+              ? 'text-white/70 hover:text-white'
+              : 'text-foreground/70 hover:text-foreground',
+          )}
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label={mobileOpen ? '메뉴 닫기' : '메뉴 열기'}
         >
