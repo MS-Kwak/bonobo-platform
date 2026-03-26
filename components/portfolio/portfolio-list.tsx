@@ -35,7 +35,7 @@ function CategoryBadge({
   const label =
     categories.find((c) => c.id === category)?.label ?? category;
   return (
-    <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+    <span className="rounded-full bg-white/20 px-3 py-1 font-heading text-xs font-bold text-white backdrop-blur-sm">
       {label}
     </span>
   );
@@ -161,7 +161,7 @@ export function PortfolioList() {
                   className="size-3.5 text-primary/60"
                   strokeWidth={1.5}
                 />
-                <span>{stat.label}</span>
+                <span className="font-heading">{stat.label}</span>
                 <span className="font-heading font-bold text-foreground">
                   {stat.count}
                 </span>
@@ -205,7 +205,9 @@ export function PortfolioList() {
                     }}
                   />
                 )}
-                <span className="relative z-10">{cat.label}</span>
+                <span className="relative z-10 font-heading">
+                  {cat.label}
+                </span>
               </button>
             ))}
 
@@ -214,87 +216,133 @@ export function PortfolioList() {
               <span className="font-heading font-bold text-foreground">
                 {filtered.length}
               </span>
-              <span>Projects</span>
+              <span className="font-heading">Projects</span>
             </div>
           </motion.div>
 
-          {/* Card Grid */}
+          {/* Bento Card Grid */}
           <AnimatePresence mode="wait">
             <motion.div
               key={active}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.3, ease }}
-              className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+              className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+              style={{ gridAutoRows: '20px', gridAutoFlow: 'dense' }}
             >
-              {filtered.map((item, i) => (
-                <motion.div
-                  key={item.id}
-                  custom={i % 3}
-                  variants={cardVariants}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true, margin: '-60px' }}
-                  exit="exit"
-                  className={cn(item.featured && 'lg:col-span-2')}
-                >
-                  <Link
-                    href={`/portfolio/${item.id}`}
-                    className="group block overflow-hidden rounded-2xl ring-1 ring-border/50 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+              {filtered.map((item, i) => {
+                const s = item.size ?? 'default';
+                const isWide = s === 'large' || s === 'wide';
+
+                const colSpan = isWide ? 2 : 1;
+                const rowSpan =
+                  s === 'large'
+                    ? 15
+                    : s === 'tall'
+                      ? 13
+                      : s === 'wide'
+                        ? 11
+                        : item.compact
+                          ? 8
+                          : 10;
+
+                const thumbH =
+                  s === 'large'
+                    ? 'h-[320px]'
+                    : s === 'tall'
+                      ? 'h-[260px]'
+                      : s === 'wide'
+                        ? 'h-[200px]'
+                        : item.compact
+                          ? 'h-[140px]'
+                          : 'h-[180px]';
+
+                return (
+                  <motion.div
+                    key={item.id}
+                    variants={cardVariants}
+                    custom={i % 3}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: '-60px' }}
+                    style={{
+                      gridColumn: `span ${colSpan}`,
+                      gridRow: `span ${rowSpan}`,
+                    }}
                   >
-                    {/* Thumbnail */}
-                    <div
-                      className={cn(
-                        'relative flex items-end overflow-hidden p-5',
-                        item.featured ? 'h-[280px]' : 'h-[200px]',
-                      )}
-                      style={{ background: item.thumbnail }}
+                    <Link
+                      href={`/portfolio/${item.id}`}
+                      className="group flex h-full flex-col overflow-hidden rounded-2xl ring-1 ring-border/50 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
                     >
                       <div
-                        className="absolute inset-0 transition-transform duration-500 group-hover:scale-105"
+                        className={cn(
+                          'relative flex shrink-0 items-end overflow-hidden p-5',
+                          thumbH,
+                        )}
                         style={{ background: item.thumbnail }}
-                      />
-                      <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
-                      <div className="relative flex w-full items-end justify-between">
-                        <CategoryBadge category={item.category} />
-                        <span className="font-heading text-sm font-bold text-white/70">
-                          {item.year}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-5">
-                      <h3 className="text-lg font-bold text-foreground transition-colors duration-200 group-hover:text-primary">
-                        {item.title}
-                      </h3>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {item.client}
-                      </p>
-                      <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground/80">
-                        {item.description}
-                      </p>
-                      <div className="mt-4 flex flex-wrap gap-1.5">
-                        {item.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground"
-                          >
-                            {tag}
+                      >
+                        <div
+                          className="absolute inset-0 transition-transform duration-500 group-hover:scale-105"
+                          style={{ background: item.thumbnail }}
+                        />
+                        <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
+                        <div className="relative flex w-full items-end justify-between">
+                          <CategoryBadge category={item.category} />
+                          <span className="font-heading text-sm font-bold text-white/70">
+                            {item.year}
                           </span>
-                        ))}
+                        </div>
                       </div>
-                      <div className="mt-4 flex items-center gap-1 text-sm font-medium text-primary">
-                        <span className="translate-x-0 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
-                          자세히 보기
-                        </span>
-                        <ArrowRight className="size-4 -translate-x-16 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" />
+
+                      <div
+                        className={cn(
+                          'flex flex-1 flex-col p-5',
+                          item.compact && 'p-4',
+                        )}
+                      >
+                        <h3
+                          className={cn(
+                            'font-bold text-foreground transition-colors duration-200 group-hover:text-primary',
+                            isWide ? 'text-xl' : 'text-lg',
+                          )}
+                        >
+                          {item.title}
+                        </h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {item.client}
+                        </p>
+                        {!item.compact && (
+                          <p
+                            className={cn(
+                              'mt-2 text-sm leading-relaxed text-muted-foreground/80',
+                              isWide
+                                ? 'line-clamp-3'
+                                : 'line-clamp-2',
+                            )}
+                          >
+                            {item.description}
+                          </p>
+                        )}
+                        <div
+                          className={cn(
+                            'mt-auto flex flex-wrap gap-1.5 pt-3',
+                          )}
+                        >
+                          {item.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="rounded-md bg-muted px-2 py-0.5 font-heading text-xs text-muted-foreground"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
+                    </Link>
+                  </motion.div>
+                );
+              })}
             </motion.div>
           </AnimatePresence>
         </div>

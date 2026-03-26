@@ -27,7 +27,7 @@ function CategoryBadge({
   const label =
     categories.find((c) => c.id === category)?.label ?? category;
   return (
-    <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+    <span className="rounded-full bg-white/20 px-3 py-1 font-heading text-xs font-bold text-white backdrop-blur-sm">
       {label}
     </span>
   );
@@ -168,7 +168,7 @@ export function PortfolioDetail({
                       delay: 0.7 + i * 0.05,
                       ease,
                     }}
-                    className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm"
+                    className="rounded-full bg-white/15 px-3 py-1 font-heading text-xs font-bold text-white backdrop-blur-sm"
                   >
                     {tag}
                   </motion.span>
@@ -249,7 +249,7 @@ export function PortfolioDetail({
               </SidebarItem>
 
               <SidebarItem icon={Layers} label="카테고리" index={2}>
-                <p className="mt-0.5 text-sm font-semibold text-foreground">
+                <p className="mt-0.5 font-heading text-sm font-semibold text-foreground">
                   {categoryLabel}
                 </p>
               </SidebarItem>
@@ -267,7 +267,7 @@ export function PortfolioDetail({
                         delay: 0.5 + i * 0.06,
                         ease,
                       }}
-                      className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-foreground shadow-sm ring-1 ring-border/50"
+                      className="rounded-md bg-white px-2.5 py-1 font-heading text-xs font-medium text-foreground shadow-sm ring-1 ring-border/50"
                     >
                       {tag}
                     </motion.span>
