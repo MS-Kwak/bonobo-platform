@@ -1,15 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
+import { useRef } from 'react';
 import {
   ArrowRight,
   Building2,
   CalendarDays,
+  CheckCircle2,
   Layers,
   Tag,
 } from 'lucide-react';
-import { FadeIn } from '@/components/motion/fade-in';
 import {
   categories,
   type PortfolioItem,
@@ -32,10 +33,81 @@ function CategoryBadge({
   );
 }
 
+const features = [
+  '사용자 친화적 UI/UX 설계',
+  '실시간 데이터 처리 및 동기화',
+  '보안 인증 및 권한 관리',
+  '확장 가능한 아키텍처 설계',
+  '관리자 대시보드 및 통계',
+  '모바일 반응형 지원',
+];
+
 interface Props {
   item: PortfolioItem;
   categoryLabel: string;
   related: PortfolioItem[];
+}
+
+function SidebarItem({
+  icon: Icon,
+  label,
+  children,
+  index,
+}: {
+  icon: React.ComponentType<{
+    className?: string;
+    strokeWidth?: number;
+  }>;
+  label: string;
+  children: React.ReactNode;
+  index: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: 0.1 + index * 0.1, ease }}
+      className="flex items-start gap-3"
+    >
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+        <Icon className="size-4 text-primary" strokeWidth={1.5} />
+      </div>
+      <div>
+        <p className="text-xs font-medium text-muted-foreground">
+          {label}
+        </p>
+        {children}
+      </div>
+    </motion.div>
+  );
+}
+
+function FeatureItem({
+  text,
+  index,
+}: {
+  text: string;
+  index: number;
+}) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: '-40px' });
+
+  return (
+    <motion.li
+      ref={ref}
+      initial={{ opacity: 0, x: -16 }}
+      animate={isInView ? { opacity: 1, x: 0 } : {}}
+      transition={{ duration: 0.4, delay: index * 0.07, ease }}
+      className="flex items-start gap-2.5 text-sm text-muted-foreground"
+    >
+      <CheckCircle2
+        className="mt-0.5 size-4 shrink-0 text-primary/60"
+        strokeWidth={1.5}
+      />
+      {text}
+    </motion.li>
+  );
 }
 
 export function PortfolioDetail({
@@ -49,41 +121,59 @@ export function PortfolioDetail({
       <section className="bg-white pt-6 pb-0">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.6,
-              ease,
-            }}
+            initial={{ opacity: 0, y: 30, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.7, ease }}
             className="relative overflow-hidden rounded-2xl"
             style={{ background: item.thumbnail }}
           >
             <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
             <div className="relative flex min-h-[280px] flex-col justify-end p-8 sm:min-h-[360px] sm:p-12">
-              <motion.h1
-                initial={{ opacity: 0, y: 16 }}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.6,
-                  delay: 0.2,
-                  ease,
-                }}
-                className="text-2xl font-bold text-white sm:text-3xl lg:text-4xl"
+                transition={{ duration: 0.5, delay: 0.3, ease }}
+              >
+                <CategoryBadge category={item.category} />
+              </motion.div>
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4, ease }}
+                className="mt-4 text-2xl font-bold text-white sm:text-3xl lg:text-4xl"
               >
                 {item.title}
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.6,
-                  delay: 0.3,
-                  ease,
-                }}
+                transition={{ duration: 0.6, delay: 0.5, ease }}
                 className="mt-3 max-w-2xl text-base leading-relaxed text-white/80"
               >
                 {item.description}
               </motion.p>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.65 }}
+                className="mt-5 flex flex-wrap gap-2"
+              >
+                {item.tags.map((tag, i) => (
+                  <motion.span
+                    key={tag}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{
+                      duration: 0.3,
+                      delay: 0.7 + i * 0.05,
+                      ease,
+                    }}
+                    className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm"
+                  >
+                    {tag}
+                  </motion.span>
+                ))}
+              </motion.div>
             </div>
           </motion.div>
         </div>
@@ -95,7 +185,12 @@ export function PortfolioDetail({
           <div className="grid gap-12 lg:grid-cols-3">
             {/* Left: Project overview */}
             <div className="lg:col-span-2">
-              <FadeIn>
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, ease }}
+              >
                 <h2 className="text-xl font-bold text-foreground">
                   프로젝트 개요
                 </h2>
@@ -115,112 +210,71 @@ export function PortfolioDetail({
                     향상시켰습니다.
                   </p>
                 </div>
-              </FadeIn>
+              </motion.div>
 
-              <FadeIn delay={0.1} className="mt-10">
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.1, ease }}
+                className="mt-10"
+              >
                 <h3 className="text-lg font-bold text-foreground">
                   주요 기능
                 </h3>
                 <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {[
-                    '사용자 친화적 UI/UX 설계',
-                    '실시간 데이터 처리 및 동기화',
-                    '보안 인증 및 권한 관리',
-                    '확장 가능한 아키텍처 설계',
-                    '관리자 대시보드 및 통계',
-                    '모바일 반응형 지원',
-                  ].map((feature) => (
-                    <li
+                  {features.map((feature, i) => (
+                    <FeatureItem
                       key={feature}
-                      className="flex items-start gap-2 text-sm text-muted-foreground"
-                    >
-                      <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
-                      {feature}
-                    </li>
+                      text={feature}
+                      index={i}
+                    />
                   ))}
                 </ul>
-              </FadeIn>
+              </motion.div>
             </div>
 
             {/* Right: Sidebar */}
-            <FadeIn delay={0.2}>
-              <div className="space-y-6 rounded-2xl bg-muted/40 p-6 lg:p-8">
-                <div className="flex items-start gap-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <Building2
-                      className="size-4 text-primary"
-                      strokeWidth={1.5}
-                    />
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">
-                      고객사
-                    </p>
-                    <p className="mt-0.5 text-sm font-semibold text-foreground">
-                      {item.client}
-                    </p>
-                  </div>
-                </div>
+            <div className="space-y-6 rounded-2xl bg-muted/40 p-6 lg:p-8">
+              <SidebarItem icon={Building2} label="고객사" index={0}>
+                <p className="mt-0.5 text-sm font-semibold text-foreground">
+                  {item.client}
+                </p>
+              </SidebarItem>
 
-                <div className="flex items-start gap-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <CalendarDays
-                      className="size-4 text-primary"
-                      strokeWidth={1.5}
-                    />
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">
-                      연도
-                    </p>
-                    <p className="mt-0.5 font-heading text-sm font-bold text-foreground">
-                      {item.year}
-                    </p>
-                  </div>
-                </div>
+              <SidebarItem icon={CalendarDays} label="연도" index={1}>
+                <p className="mt-0.5 font-heading text-sm font-bold text-foreground">
+                  {item.year}
+                </p>
+              </SidebarItem>
 
-                <div className="flex items-start gap-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <Layers
-                      className="size-4 text-primary"
-                      strokeWidth={1.5}
-                    />
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">
-                      카테고리
-                    </p>
-                    <p className="mt-0.5 text-sm font-semibold text-foreground">
-                      {categoryLabel}
-                    </p>
-                  </div>
-                </div>
+              <SidebarItem icon={Layers} label="카테고리" index={2}>
+                <p className="mt-0.5 text-sm font-semibold text-foreground">
+                  {categoryLabel}
+                </p>
+              </SidebarItem>
 
-                <div className="flex items-start gap-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <Tag
-                      className="size-4 text-primary"
-                      strokeWidth={1.5}
-                    />
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">
-                      기술 스택
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {item.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-foreground shadow-sm ring-1 ring-border/50"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+              <SidebarItem icon={Tag} label="기술 스택" index={3}>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {item.tags.map((tag, i) => (
+                    <motion.span
+                      key={tag}
+                      initial={{ opacity: 0, scale: 0.85 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{
+                        duration: 0.3,
+                        delay: 0.5 + i * 0.06,
+                        ease,
+                      }}
+                      className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-foreground shadow-sm ring-1 ring-border/50"
+                    >
+                      {tag}
+                    </motion.span>
+                  ))}
                 </div>
-              </div>
-            </FadeIn>
+              </SidebarItem>
+            </div>
           </div>
         </div>
       </section>
@@ -228,23 +282,37 @@ export function PortfolioDetail({
       {/* Related Projects */}
       <section className="border-t border-border/50 bg-muted/30 py-16 lg:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <FadeIn>
-            <h2 className="text-xl font-bold text-foreground">
-              다른 프로젝트 보기
-            </h2>
-          </FadeIn>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, ease }}
+            className="text-xl font-bold text-foreground"
+          >
+            다른 프로젝트 보기
+          </motion.h2>
 
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {related.map((project, i) => (
-              <FadeIn key={project.id} delay={i * 0.1}>
+              <motion.div
+                key={project.id}
+                initial={{ opacity: 0, y: 32 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 0.6, delay: i * 0.12, ease }}
+              >
                 <Link
                   href={`/portfolio/${project.id}`}
-                  className="group block overflow-hidden rounded-2xl bg-white ring-1 ring-border/50 shadow-sm transition-shadow duration-300 hover:shadow-lg"
+                  className="group block overflow-hidden rounded-2xl bg-white ring-1 ring-border/50 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
                 >
                   <div
-                    className="relative flex h-[180px] items-end p-4"
+                    className="relative flex h-[180px] items-end overflow-hidden p-4"
                     style={{ background: project.thumbnail }}
                   >
+                    <div
+                      className="absolute inset-0 transition-transform duration-500 group-hover:scale-105"
+                      style={{ background: project.thumbnail }}
+                    />
                     <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
                     <div className="relative flex w-full items-end justify-between">
                       <CategoryBadge category={project.category} />
@@ -254,19 +322,21 @@ export function PortfolioDetail({
                     </div>
                   </div>
                   <div className="p-4">
-                    <h3 className="font-bold text-foreground transition-colors group-hover:text-primary">
+                    <h3 className="font-bold text-foreground transition-colors duration-200 group-hover:text-primary">
                       {project.title}
                     </h3>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {project.client}
                     </p>
-                    <div className="mt-3 flex items-center gap-1 text-sm font-medium text-primary opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                      자세히 보기
-                      <ArrowRight className="size-3.5" />
+                    <div className="mt-3 flex items-center gap-1 text-sm font-medium text-primary">
+                      <span className="opacity-0 transition-all duration-300 group-hover:opacity-100">
+                        자세히 보기
+                      </span>
+                      <ArrowRight className="size-3.5 -translate-x-12 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" />
                     </div>
                   </div>
                 </Link>
-              </FadeIn>
+              </motion.div>
             ))}
           </div>
         </div>
