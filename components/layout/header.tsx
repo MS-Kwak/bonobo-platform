@@ -21,7 +21,9 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const hasDarkHero = darkHeroPages.includes(pathname);
+  const hasDarkHero = darkHeroPages.some(
+    (p) => pathname === p || pathname.startsWith(p + '/'),
+  );
   const isLight = hasDarkHero && !scrolled && !mobileOpen;
 
   useEffect(() => {

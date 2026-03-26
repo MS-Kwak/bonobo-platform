@@ -3,12 +3,12 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
+  ArrowLeft,
   CalendarDays,
-  Eye,
-  User,
   ChevronLeft,
   ChevronRight,
-  ArrowLeft,
+  Eye,
+  User,
 } from 'lucide-react';
 import type { NoticeItem } from '@/data/notices';
 
@@ -32,6 +32,38 @@ interface Props {
 export function NoticeDetail({ item, prev, next }: Props) {
   return (
     <>
+      {/* Hero */}
+      <section className="relative overflow-hidden bg-primary pt-32 pb-10 lg:pt-40 lg:pb-16">
+        <div className="pointer-events-none absolute inset-0">
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-35 mix-blend-luminosity"
+            style={{ backgroundImage: 'url(/images/bg02.png)' }}
+          />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.06),transparent_60%)]" />
+        </div>
+
+        <div className="relative mx-auto max-w-4xl px-6 lg:px-8">
+          <div className="flex flex-col items-center text-center">
+            <motion.p
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease }}
+              className="font-heading text-sm font-bold tracking-widest text-white/60 uppercase"
+            >
+              Notice
+            </motion.p>
+            <motion.h1
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.1, ease }}
+              className="mt-4 text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl"
+            >
+              공지사항
+            </motion.h1>
+          </div>
+        </div>
+      </section>
+
       {/* Article */}
       <article className="bg-white py-12 lg:py-20">
         <div className="mx-auto max-w-3xl px-6 lg:px-8">
@@ -92,21 +124,16 @@ export function NoticeDetail({ item, prev, next }: Props) {
             ))}
           </motion.div>
 
-          {/* Back button */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-            className="mt-12"
-          >
+          {/* Bottom back button */}
+          <div className="mt-10 border-t border-border/50 pt-8">
             <Link
               href="/notice"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               <ArrowLeft className="size-4" />
-              목록으로
+              공지사항 목록
             </Link>
-          </motion.div>
+          </div>
         </div>
       </article>
 

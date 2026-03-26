@@ -1,6 +1,4 @@
 import { Metadata } from 'next';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { noticeItems } from '@/data/notices';
 import { NoticeDetail } from '@/components/notice/notice-detail';
@@ -38,21 +36,5 @@ export default async function NoticeDetailPage({ params }: Props) {
       : null;
   const next = currentIdx > 0 ? noticeItems[currentIdx - 1] : null;
 
-  return (
-    <>
-      <div className="bg-white pt-24 lg:pt-28">
-        <div className="mx-auto max-w-3xl px-6 lg:px-8">
-          <Link
-            href="/notice"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="size-4" />
-            공지사항 목록
-          </Link>
-        </div>
-      </div>
-
-      <NoticeDetail item={item} prev={prev} next={next} />
-    </>
-  );
+  return <NoticeDetail item={item} prev={prev} next={next} />;
 }
