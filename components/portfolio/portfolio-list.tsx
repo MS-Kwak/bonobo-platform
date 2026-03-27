@@ -1,17 +1,30 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
-import { ArrowRight, Search, Sparkles } from 'lucide-react';
+import { useInView as useIntersection } from 'react-intersection-observer';
+import {
+  ArrowRight,
+  Search,
+  Sparkles,
+  Loader2,
+  X,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
-  portfolioItems,
   categories,
+  type PortfolioItem,
   type PortfolioCategory,
 } from '@/data/portfolio';
 
 const ease: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
+const PAGE_SIZE = 10;
+
+const SCROLL_KEY = 'portfolio-scroll';
+const FILTER_KEY = 'portfolio-filter';
+const COUNT_KEY = 'portfolio-count';
 
 const cardVariants = {
   hidden: { opacity: 0, y: 60 },
@@ -64,13 +77,105 @@ function AnimatedCount({ target }: { target: number }) {
   return <span ref={ref}>{count}</span>;
 }
 
-export function PortfolioList() {
-  const [active, setActive] = useState<PortfolioCategory>('all');
+interface Props {
+  initialItems: PortfolioItem[];
+  categoryCounts: Record<PortfolioCategory, number>;
+}
 
-  const filtered =
-    active === 'all'
-      ? portfolioItems
-      : portfolioItems.filter((item) => item.category === active);
+export function PortfolioList({
+  initialItems,
+  categoryCounts,
+}: Props) {
+  const [active, setActive] = useState<PortfolioCategory>('all');
+  const [displayCount, setDisplayCount] = useState(PAGE_SIZE);
+  const [brokenImages, setBrokenImages] = useState<Set<number>>(
+    new Set(),
+  );
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const didRestore = useRef(false);
+
+  // Restore scroll position & filter from sessionStorage (once, after mount)
+  useEffect(() => {
+    if (didRestore.current) return;
+    didRestore.current = true;
+
+    const savedFilter = sessionStorage.getItem(
+      FILTER_KEY,
+    ) as PortfolioCategory | null;
+    const savedCount = sessionStorage.getItem(COUNT_KEY);
+
+    if (savedFilter) setActive(savedFilter);
+    if (savedCount)
+      setDisplayCount(Math.max(Number(savedCount), PAGE_SIZE));
+
+    const savedY = sessionStorage.getItem(SCROLL_KEY);
+    if (savedY) {
+      requestAnimationFrame(() => window.scrollTo(0, Number(savedY)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-time mount restore
+  }, []);
+
+  // Persist scroll position on scroll
+  useEffect(() => {
+    const onScroll = () => {
+      sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Persist filter & count whenever they change
+  useEffect(() => {
+    sessionStorage.setItem(FILTER_KEY, active);
+    sessionStorage.setItem(COUNT_KEY, String(displayCount));
+  }, [active, displayCount]);
+
+  const { ref: loadMoreRef } = useIntersection({
+    threshold: 0,
+    onChange: (inView) => {
+      if (inView) setDisplayCount((prev) => prev + PAGE_SIZE);
+    },
+  });
+
+  const handleFilterChange = useCallback((cat: PortfolioCategory) => {
+    setActive(cat);
+    setDisplayCount(PAGE_SIZE);
+    sessionStorage.removeItem(SCROLL_KEY);
+  }, []);
+
+  const handleSearchToggle = useCallback(() => {
+    setSearchOpen((prev) => {
+      if (prev) {
+        setSearchQuery('');
+        setDisplayCount(PAGE_SIZE);
+        return false;
+      }
+      requestAnimationFrame(() => searchInputRef.current?.focus());
+      return true;
+    });
+  }, []);
+
+  const handleSearchChange = useCallback((q: string) => {
+    setSearchQuery(q);
+    setDisplayCount(PAGE_SIZE);
+  }, []);
+
+  const filtered = initialItems.filter((item) => {
+    if (active !== 'all' && item.category !== active) return false;
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.trim().toLowerCase();
+    return (
+      item.title.toLowerCase().includes(q) ||
+      item.client.toLowerCase().includes(q) ||
+      item.description.toLowerCase().includes(q) ||
+      item.tags.some((t) => t.toLowerCase().includes(q))
+    );
+  });
+
+  const displayed = filtered.slice(0, displayCount);
+  const hasMore = displayCount < filtered.length;
 
   return (
     <>
@@ -111,8 +216,8 @@ export function PortfolioList() {
           >
             1999년부터{' '}
             <span className="font-heading font-bold text-foreground">
-              <AnimatedCount target={200} />+
-            </span>{' '}
+              <AnimatedCount target={categoryCounts.all} />
+            </span>
             개 프로젝트를 완성했습니다
           </motion.p>
 
@@ -123,47 +228,25 @@ export function PortfolioList() {
             transition={{ duration: 0.7, delay: 0.35, ease }}
             className="mt-8 flex flex-wrap gap-6 text-sm text-muted-foreground"
           >
-            {[
-              {
-                icon: Sparkles,
-                label: 'Web / Mobile',
-                count: portfolioItems.filter(
-                  (p) => p.category === 'web',
-                ).length,
-              },
-              {
-                icon: Sparkles,
-                label: 'App',
-                count: portfolioItems.filter(
-                  (p) => p.category === 'app',
-                ).length,
-              },
-              {
-                icon: Sparkles,
-                label: 'Program',
-                count: portfolioItems.filter(
-                  (p) => p.category === 'program',
-                ).length,
-              },
-              {
-                icon: Sparkles,
-                label: 'AI / Data',
-                count: portfolioItems.filter(
-                  (p) => p.category === 'ai',
-                ).length,
-              },
-            ].map((stat) => (
+            {(
+              [
+                { label: 'Web / Mobile', cat: 'web' as const },
+                { label: 'App', cat: 'app' as const },
+                { label: 'Program', cat: 'program' as const },
+                { label: 'AI / Data', cat: 'ai' as const },
+              ] as const
+            ).map((stat) => (
               <div
                 key={stat.label}
                 className="flex items-center gap-1.5"
               >
-                <stat.icon
+                <Sparkles
                   className="size-3.5 text-primary/60"
                   strokeWidth={1.5}
                 />
                 <span className="font-heading">{stat.label}</span>
                 <span className="font-heading font-bold text-foreground">
-                  {stat.count}
+                  {categoryCounts[stat.cat]}
                 </span>
               </div>
             ))}
@@ -174,6 +257,28 @@ export function PortfolioList() {
       {/* Filters + Grid */}
       <section className="bg-white py-16 lg:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          {/* Mobile search */}
+          <AnimatePresence>
+            {searchOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="mb-4 overflow-hidden sm:hidden"
+              >
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  placeholder="프로젝트 검색..."
+                  className="h-10 w-full rounded-xl border border-border/60 bg-muted/40 px-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/50 focus:border-primary/40 focus:bg-white"
+                  autoFocus
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Filter Tabs */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -186,7 +291,7 @@ export function PortfolioList() {
               <button
                 key={cat.id}
                 type="button"
-                onClick={() => setActive(cat.id)}
+                onClick={() => handleFilterChange(cat.id)}
                 className={cn(
                   'relative rounded-full px-5 py-2 text-sm font-medium transition-colors duration-200',
                   active === cat.id
@@ -211,19 +316,61 @@ export function PortfolioList() {
               </button>
             ))}
 
-            <div className="ml-auto hidden items-center gap-2 text-sm text-muted-foreground sm:flex">
-              <Search className="size-4" strokeWidth={1.5} />
-              <span className="font-heading font-bold text-foreground">
-                {filtered.length}
-              </span>
-              <span className="font-heading">Projects</span>
+            <div className="ml-auto flex items-center gap-2">
+              <AnimatePresence>
+                {searchOpen && (
+                  <motion.div
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: 220, opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    transition={{
+                      duration: 0.25,
+                      ease: [0.25, 0.1, 0.25, 1],
+                    }}
+                    className="hidden overflow-hidden sm:block"
+                  >
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) =>
+                        handleSearchChange(e.target.value)
+                      }
+                      placeholder="프로젝트 검색..."
+                      className="h-9 w-full rounded-full border border-border/60 bg-muted/40 px-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/50 focus:border-primary/40 focus:bg-white"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <button
+                type="button"
+                onClick={handleSearchToggle}
+                className={cn(
+                  'flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition-colors',
+                  searchOpen
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                {searchOpen ? (
+                  <X className="size-4" strokeWidth={1.5} />
+                ) : (
+                  <Search className="size-4" strokeWidth={1.5} />
+                )}
+                <span className="font-heading font-bold text-foreground">
+                  {filtered.length}
+                </span>
+                <span className="font-heading text-muted-foreground">
+                  Projects
+                </span>
+              </button>
             </div>
           </motion.div>
 
           {/* Bento Card Grid */}
           <AnimatePresence mode="wait">
             <motion.div
-              key={active}
+              key={`${active}-${searchQuery}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -231,7 +378,21 @@ export function PortfolioList() {
               className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
               style={{ gridAutoRows: '20px', gridAutoFlow: 'dense' }}
             >
-              {filtered.map((item, i) => {
+              {displayed.length === 0 && (
+                <div className="col-span-full flex flex-col items-center justify-center py-24 text-center">
+                  <Search
+                    className="mb-4 size-10 text-muted-foreground/30"
+                    strokeWidth={1.5}
+                  />
+                  <p className="text-lg font-medium text-muted-foreground">
+                    검색 결과가 없습니다
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground/60">
+                    다른 키워드로 검색해보세요
+                  </p>
+                </div>
+              )}
+              {displayed.map((item, i) => {
                 const s = item.size ?? 'default';
                 const isWide = s === 'large' || s === 'wide';
 
@@ -243,9 +404,7 @@ export function PortfolioList() {
                       ? 13
                       : s === 'wide'
                         ? 11
-                        : item.compact
-                          ? 8
-                          : 10;
+                        : 10;
 
                 const thumbH =
                   s === 'large'
@@ -254,9 +413,10 @@ export function PortfolioList() {
                       ? 'h-[260px]'
                       : s === 'wide'
                         ? 'h-[200px]'
-                        : item.compact
-                          ? 'h-[140px]'
-                          : 'h-[180px]';
+                        : 'h-[180px]';
+
+                const showImage =
+                  item.thumbnail && !brokenImages.has(item.id);
 
                 return (
                   <motion.div
@@ -280,12 +440,35 @@ export function PortfolioList() {
                           'relative flex shrink-0 items-end overflow-hidden p-5',
                           thumbH,
                         )}
-                        style={{ background: item.thumbnail }}
+                        style={
+                          showImage
+                            ? undefined
+                            : { background: item.gradient }
+                        }
                       >
-                        <div
-                          className="absolute inset-0 transition-transform duration-500 group-hover:scale-105"
-                          style={{ background: item.thumbnail }}
-                        />
+                        {showImage ? (
+                          <Image
+                            src={item.thumbnail!}
+                            alt={item.title}
+                            fill
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            sizes={
+                              isWide
+                                ? '(max-width: 640px) 100vw, 66vw'
+                                : '(max-width: 640px) 100vw, 33vw'
+                            }
+                            onError={() =>
+                              setBrokenImages((prev) =>
+                                new Set(prev).add(item.id),
+                              )
+                            }
+                          />
+                        ) : (
+                          <div
+                            className="absolute inset-0 transition-transform duration-500 group-hover:scale-105"
+                            style={{ background: item.gradient }}
+                          />
+                        )}
                         <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
                         <div className="relative flex w-full items-end justify-between">
                           <CategoryBadge category={item.category} />
@@ -295,12 +478,7 @@ export function PortfolioList() {
                         </div>
                       </div>
 
-                      <div
-                        className={cn(
-                          'flex flex-1 flex-col p-5',
-                          item.compact && 'p-4',
-                        )}
-                      >
+                      <div className="flex flex-1 flex-col p-5">
                         <h3
                           className={cn(
                             'font-bold text-foreground transition-colors duration-200 group-hover:text-primary',
@@ -312,7 +490,7 @@ export function PortfolioList() {
                         <p className="mt-1 text-sm text-muted-foreground">
                           {item.client}
                         </p>
-                        {!item.compact && (
+                        {item.description && (
                           <p
                             className={cn(
                               'mt-2 text-sm leading-relaxed text-muted-foreground/80',
@@ -324,20 +502,18 @@ export function PortfolioList() {
                             {item.description}
                           </p>
                         )}
-                        <div
-                          className={cn(
-                            'mt-auto flex flex-wrap gap-1.5 pt-3',
-                          )}
-                        >
-                          {item.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="rounded-md bg-muted px-2 py-0.5 font-heading text-xs text-muted-foreground"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
+                        {item.tags.length > 0 && (
+                          <div className="mt-auto flex flex-wrap gap-1.5 pt-3">
+                            {item.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="rounded-md bg-muted px-2 py-0.5 font-heading text-xs text-muted-foreground"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </Link>
                   </motion.div>
@@ -345,6 +521,16 @@ export function PortfolioList() {
               })}
             </motion.div>
           </AnimatePresence>
+
+          {/* Load more trigger */}
+          {hasMore && (
+            <div
+              ref={loadMoreRef}
+              className="mt-10 flex justify-center"
+            >
+              <Loader2 className="size-6 animate-spin text-muted-foreground/40" />
+            </div>
+          )}
         </div>
       </section>
     </>
