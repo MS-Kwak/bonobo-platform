@@ -21,6 +21,8 @@ interface PortfolioRow extends RowDataPacket {
   himage: string | null;
   card_size: string | null;
   tech_stack: string | null;
+  short_desc: string | null;
+  features: string | null;
   k01: number;
   k02: number;
   k03: number;
@@ -36,7 +38,7 @@ interface PortfolioRow extends RowDataPacket {
 const IMAGE_BASE_URL = 'https://bonobo.co.kr/admin/files/';
 
 const PORTFOLIO_COLUMNS =
-  'psn, pkind, regdate, pname, client_name, ptitle, pdesc, attack1, attack2, attack3, hit, himage, card_size, tech_stack, k01, k02, k03, k04, k05, k06, k07, k08, k09, k10';
+  'psn, pkind, regdate, pname, client_name, ptitle, pdesc, attack1, attack2, attack3, hit, himage, card_size, tech_stack, short_desc, features, k01, k02, k03, k04, k05, k06, k07, k08, k09, k10';
 
 const CATEGORY_K_MAP: Record<
   Exclude<PortfolioCategory, 'all'>,
@@ -46,6 +48,19 @@ const CATEGORY_K_MAP: Record<
   app: ['k08'],
   program: ['k01', 'k09', 'k10'],
   ai: ['k02', 'k03', 'k04'],
+};
+
+const K_FLAG_LABELS: Record<string, string> = {
+  k01: 'ERP',
+  k02: 'IoT',
+  k03: '빅데이터',
+  k04: '예측분석',
+  k05: '매칭플랫폼',
+  k06: '쇼핑몰',
+  k07: '홈페이지',
+  k08: 'App',
+  k09: '응용프로그램',
+  k10: '정부지원사업',
 };
 
 const GRADIENTS = [
@@ -132,16 +147,22 @@ function extractDescription(html: string): string {
 
   text = removeLeadingQuote(text);
 
-  if (text.length <= 200) return text;
+  if (text.length <= 100) return text;
 
-  const cut = text.slice(0, 200);
+  const cut = text.slice(0, 100);
   const lastPeriod = cut.lastIndexOf('.');
-  if (lastPeriod > 80) return cut.slice(0, lastPeriod + 1);
+  if (lastPeriod > 30) return cut.slice(0, lastPeriod + 1);
   return cut + '…';
 }
 
 function resolveHimage(himage: string | null): string | null {
   if (!himage || !himage.trim()) return null;
+
+  if (
+    himage.startsWith('/api/uploads/') ||
+    himage.startsWith('/uploads/')
+  )
+    return himage;
 
   if (himage.startsWith('http')) {
     const slashCount = (himage.match(/\//g) || []).length;
@@ -190,24 +211,40 @@ function toPortfolioItem(
 
   const gradient = GRADIENTS[row.psn % GRADIENTS.length];
 
+  const hasExplicitSize = !!row.card_size && row.card_size !== '';
   let size = (row.card_size as CardSize) || 'default';
-  if (size === 'default') {
+  if (!hasExplicitSize) {
     if (index === 0) size = 'large';
     else if (index % 7 === 3) size = 'wide';
     else if (index % 7 === 5 && thumbnail) size = 'tall';
   }
 
-  const description = extractDescription(row.pdesc);
+  const description = row.short_desc || extractDescription(row.pdesc);
+
+  const featureList: string[] = row.features
+    ? row.features
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
+
+  const kFlags: string[] = [];
+  for (const [key, label] of Object.entries(K_FLAG_LABELS)) {
+    if (row[key as keyof PortfolioRow] === 1) kFlags.push(label);
+  }
 
   return {
     id: row.psn,
     title: row.ptitle,
     description,
+    shortDesc: row.short_desc ?? null,
+    featureList,
     category: primaryCat,
     categories: allCats.length > 0 ? allCats : [primaryCat],
     client: row.client_name || row.pname,
     year: new Date(row.regdate).getFullYear(),
     tags,
+    kFlags,
     thumbnail,
     gradient,
     content: resolveImagePaths(row.pdesc),

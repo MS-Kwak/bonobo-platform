@@ -397,23 +397,10 @@ export function PortfolioList({
                 const isWide = s === 'large' || s === 'wide';
 
                 const colSpan = isWide ? 2 : 1;
-                const rowSpan =
-                  s === 'large'
-                    ? 15
-                    : s === 'tall'
-                      ? 13
-                      : s === 'wide'
-                        ? 11
-                        : 10;
+                const isTallImg = s === 'large' || s === 'tall';
+                const rowSpan = isTallImg ? 13 : 11;
 
-                const thumbH =
-                  s === 'large'
-                    ? 'h-[320px]'
-                    : s === 'tall'
-                      ? 'h-[260px]'
-                      : s === 'wide'
-                        ? 'h-[200px]'
-                        : 'h-[180px]';
+                const thumbH = isTallImg ? 'h-[280px]' : 'h-[180px]';
 
                 const showImage =
                   item.thumbnail && !brokenImages.has(item.id);
@@ -478,7 +465,7 @@ export function PortfolioList({
                         </div>
                       </div>
 
-                      <div className="flex flex-1 flex-col p-5">
+                      <div className="flex h-[200px] flex-col p-5">
                         <h3
                           className={cn(
                             'font-bold text-foreground transition-colors duration-200 group-hover:text-primary',
@@ -491,14 +478,7 @@ export function PortfolioList({
                           {item.client}
                         </p>
                         {item.description && (
-                          <p
-                            className={cn(
-                              'mt-2 text-sm leading-relaxed text-muted-foreground/80',
-                              isWide
-                                ? 'line-clamp-3'
-                                : 'line-clamp-2',
-                            )}
-                          >
+                          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground/80">
                             {item.description}
                           </p>
                         )}

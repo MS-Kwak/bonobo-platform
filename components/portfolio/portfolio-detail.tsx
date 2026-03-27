@@ -10,6 +10,7 @@ import {
   Building2,
   CalendarDays,
   CheckCircle2,
+  Hash,
   Layers,
   Tag,
 } from 'lucide-react';
@@ -182,11 +183,16 @@ export function PortfolioDetail({
   related,
 }: Props) {
   const overview = extractOverview(item.content);
-  const features = extractFeatures(item.content);
+  const features =
+    item.featureList?.length > 0
+      ? item.featureList
+      : extractFeatures(item.content);
   const contentImages = extractContentImages(item.content);
+  const hasThumbnail = item.thumbnail && !contentImages;
   const [brokenRelatedImgs, setBrokenRelatedImgs] = useState<
     Set<number>
   >(new Set());
+  const [thumbError, setThumbError] = useState(false);
 
   return (
     <>
@@ -317,7 +323,7 @@ export function PortfolioDetail({
               </motion.div>
 
               {/* 프로젝트 이미지 (타이틀 없이 이미지만) */}
-              {contentImages && (
+              {contentImages ? (
                 <motion.div
                   initial={{ opacity: 0, y: 24 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -332,7 +338,24 @@ export function PortfolioDetail({
                     }}
                   />
                 </motion.div>
-              )}
+              ) : hasThumbnail && !thumbError ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.2, ease }}
+                  className="mt-10"
+                >
+                  <Image
+                    src={item.thumbnail!}
+                    alt={item.title}
+                    width={800}
+                    height={500}
+                    className="w-full rounded-xl"
+                    onError={() => setThumbError(true)}
+                  />
+                </motion.div>
+              ) : null}
             </div>
 
             {/* Right: Sidebar */}
@@ -372,6 +395,29 @@ export function PortfolioDetail({
                         className="rounded-md bg-white px-2.5 py-1 font-heading text-xs font-medium text-foreground shadow-sm ring-1 ring-border/50"
                       >
                         {tag}
+                      </motion.span>
+                    ))}
+                  </div>
+                </SidebarItem>
+              )}
+
+              {item.kFlags.length > 0 && (
+                <SidebarItem icon={Hash} label="구분" index={4}>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {item.kFlags.map((flag, i) => (
+                      <motion.span
+                        key={flag}
+                        initial={{ opacity: 0, scale: 0.85 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{
+                          duration: 0.3,
+                          delay: 0.6 + i * 0.06,
+                          ease,
+                        }}
+                        className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary ring-1 ring-primary/20"
+                      >
+                        {flag}
                       </motion.span>
                     ))}
                   </div>

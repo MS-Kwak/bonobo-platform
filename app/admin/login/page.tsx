@@ -80,7 +80,7 @@ export default function AdminLoginPage() {
                 type="text"
                 value={id}
                 onChange={(e) => setId(e.target.value)}
-                className="h-10 w-full rounded-lg border border-border/60 bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted-foreground/50 focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+                className="h-10 w-full rounded-lg border border-border/60 bg-muted/30 px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/50 focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
                 placeholder="ID"
                 autoFocus
                 required
@@ -98,7 +98,7 @@ export default function AdminLoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-10 w-full rounded-lg border border-border/60 bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted-foreground/50 focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+                className="h-10 w-full rounded-lg border border-border/60 bg-muted/30 px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/50 focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
                 placeholder="Password"
                 required
               />

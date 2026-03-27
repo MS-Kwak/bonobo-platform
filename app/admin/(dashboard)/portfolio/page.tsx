@@ -27,7 +27,7 @@ export default async function AdminPortfolioPage({
   const search = params.search ?? '';
   const { items, total, totalPages } = await getAdminPortfolioList(
     page,
-    20,
+    10,
     search,
   );
 
@@ -57,7 +57,7 @@ export default async function AdminPortfolioPage({
           name="search"
           defaultValue={search}
           placeholder="제목, 고객사 검색..."
-          className="h-9 flex-1 rounded-lg border border-border/60 bg-card px-3 text-sm outline-none placeholder:text-muted-foreground/50 focus:border-primary/40"
+          className="h-9 flex-1 rounded-lg border border-border/60 bg-muted/30 px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/50 focus:border-primary/40"
         />
         <button
           type="submit"

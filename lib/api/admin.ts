@@ -30,7 +30,7 @@ export async function getAdminPortfolioList(
     ),
     pool.query<RowDataPacket[]>(
       `SELECT psn, pkind, regdate, pname, client_name, ptitle, himage, hit, is_pinned, card_size, tech_stack,
-              k01,k02,k03,k04,k05,k06,k07,k08,k09,k10
+              short_desc, features, k01,k02,k03,k04,k05,k06,k07,k08,k09,k10
        FROM PubNotice ${where}
        ORDER BY regdate DESC, psn DESC
        LIMIT ? OFFSET ?`,

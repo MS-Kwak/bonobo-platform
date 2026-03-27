@@ -10,11 +10,14 @@ export interface PortfolioItem {
   id: number;
   title: string;
   description: string;
+  shortDesc: string | null;
+  featureList: string[];
   category: PortfolioCategory;
   categories: PortfolioCategory[];
   client: string;
   year: number;
   tags: string[];
+  kFlags: string[];
   thumbnail: string | null;
   gradient: string;
   content: string;

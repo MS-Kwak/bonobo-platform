@@ -23,6 +23,10 @@ const nextConfig: NextConfig = {
         hostname: 'www.bonobo.co.kr',
         pathname: '/admin/files/**',
       },
+      {
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com',
+      },
     ],
   },
 };

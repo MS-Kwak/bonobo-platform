@@ -79,7 +79,7 @@ export default function AdminSettingsPage() {
             type="password"
             value={oldPw}
             onChange={(e) => setOldPw(e.target.value)}
-            className="h-10 w-full rounded-lg border border-border/60 bg-background px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+            className="h-10 w-full rounded-lg border border-border/60 bg-muted/30 px-3 text-sm text-foreground outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
             required
           />
         </div>
@@ -91,7 +91,7 @@ export default function AdminSettingsPage() {
             type="password"
             value={newPw}
             onChange={(e) => setNewPw(e.target.value)}
-            className="h-10 w-full rounded-lg border border-border/60 bg-background px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+            className="h-10 w-full rounded-lg border border-border/60 bg-muted/30 px-3 text-sm text-foreground outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
             required
           />
         </div>
@@ -103,7 +103,7 @@ export default function AdminSettingsPage() {
             type="password"
             value={confirmPw}
             onChange={(e) => setConfirmPw(e.target.value)}
-            className="h-10 w-full rounded-lg border border-border/60 bg-background px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+            className="h-10 w-full rounded-lg border border-border/60 bg-muted/30 px-3 text-sm text-foreground outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
             required
           />
         </div>
