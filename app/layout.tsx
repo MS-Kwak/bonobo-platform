@@ -30,6 +30,21 @@ export const metadata: Metadata = {
   title: '보노보플랫폼',
   description:
     '복잡한 시스템도 하나의 팀이 끝까지 책임집니다. 25년 이상 200+ 프로젝트를 완성한 소프트웨어 전문 기업',
+  openGraph: {
+    title: '보노보플랫폼',
+    description:
+      '복잡한 시스템도 하나의 팀이 끝까지 책임집니다. 25년 이상 200+ 프로젝트를 완성한 소프트웨어 전문 기업',
+    images: [{ url: '/images/bonobo-og.png' }],
+    siteName: '보노보플랫폼',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '보노보플랫폼',
+    description:
+      '복잡한 시스템도 하나의 팀이 끝까지 책임집니다. 25년 이상 200+ 프로젝트를 완성한 소프트웨어 전문 기업',
+    images: ['/images/bonobo-og.png'],
+  },
 };
 
 export default function RootLayout({
