@@ -66,6 +66,10 @@ const TECH_STACK_OPTIONS = [
   'Excel 출력 (xlsx)',
   'Chart.js',
   'PDF 자동생성 (PDFKit)',
+  'Git',
+  'Bitbucket',
+  'Jenkins (CI/CD)',
+  'OpenAI API',
 ] as const;
 
 const K_FLAG_OPTIONS = [
@@ -359,10 +363,10 @@ export function PortfolioForm({ initialData, isNew }: Props) {
       }
       if (isNew) {
         router.push('/admin/portfolio');
-        router.refresh();
       } else {
         router.back();
       }
+      router.refresh();
     } catch {
       setError('저장 중 오류가 발생했습니다.');
     } finally {
