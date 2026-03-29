@@ -1,9 +1,15 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useSyncExternalStore,
+} from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useInView as useIntersection } from 'react-intersection-observer';
 import {
   ArrowRight,
@@ -54,27 +60,36 @@ function CategoryBadge({
   );
 }
 
+const subscribe = () => () => {};
+
 function AnimatedCount({ target }: { target: number }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true });
-  const [count, setCount] = useState(0);
 
   useEffect(() => {
-    if (!isInView) return;
+    const el = ref.current;
+    if (!el) return;
     let frame: number;
-    const duration = 1200;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.round(eased * target));
-      if (progress < 1) frame = requestAnimationFrame(tick);
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries[0].isIntersecting) return;
+      observer.disconnect();
+      const duration = 1200;
+      const start = performance.now();
+      el.textContent = '0';
+      frame = requestAnimationFrame(function tick(now: number) {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = String(Math.round(eased * target));
+        if (progress < 1) frame = requestAnimationFrame(tick);
+      });
+    });
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
     };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [isInView, target]);
+  }, [target]);
 
-  return <span ref={ref}>{count}</span>;
+  return <span ref={ref}>{target}</span>;
 }
 
 interface Props {
@@ -86,35 +101,40 @@ export function PortfolioList({
   initialItems,
   categoryCounts,
 }: Props) {
-  const [active, setActive] = useState<PortfolioCategory>('all');
-  const [displayCount, setDisplayCount] = useState(PAGE_SIZE);
+  const savedFilter = useSyncExternalStore(
+    subscribe,
+    () =>
+      sessionStorage.getItem(FILTER_KEY) as PortfolioCategory | null,
+    () => null,
+  );
+  const savedCount = useSyncExternalStore(
+    subscribe,
+    () => {
+      const v = sessionStorage.getItem(COUNT_KEY);
+      return v ? Math.max(Number(v), PAGE_SIZE) : PAGE_SIZE;
+    },
+    () => PAGE_SIZE,
+  );
+
+  const [active, setActive] = useState<PortfolioCategory>(
+    savedFilter ?? 'all',
+  );
+  const [displayCount, setDisplayCount] = useState(savedCount);
   const [brokenImages, setBrokenImages] = useState<Set<number>>(
     new Set(),
   );
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const didRestore = useRef(false);
+  const didRestoreScroll = useRef(false);
 
-  // Restore scroll position & filter from sessionStorage (once, after mount)
   useEffect(() => {
-    if (didRestore.current) return;
-    didRestore.current = true;
-
-    const savedFilter = sessionStorage.getItem(
-      FILTER_KEY,
-    ) as PortfolioCategory | null;
-    const savedCount = sessionStorage.getItem(COUNT_KEY);
-
-    if (savedFilter) setActive(savedFilter);
-    if (savedCount)
-      setDisplayCount(Math.max(Number(savedCount), PAGE_SIZE));
-
+    if (didRestoreScroll.current) return;
+    didRestoreScroll.current = true;
     const savedY = sessionStorage.getItem(SCROLL_KEY);
     if (savedY) {
       requestAnimationFrame(() => window.scrollTo(0, Number(savedY)));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-time mount restore
   }, []);
 
   // Persist scroll position on scroll
@@ -216,9 +236,9 @@ export function PortfolioList({
           >
             1999년부터{' '}
             <span className="font-heading font-bold text-foreground">
-              <AnimatedCount target={categoryCounts.all} />
+              <AnimatedCount target={categoryCounts.all} />+
             </span>
-            개 프로젝트를 완성했습니다
+            &nbsp;의 프로젝트를 완성했습니다
           </motion.p>
 
           {/* Stats */}
@@ -257,28 +277,6 @@ export function PortfolioList({
       {/* Filters + Grid */}
       <section className="bg-white py-16 lg:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          {/* Mobile search */}
-          <AnimatePresence>
-            {searchOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="mb-4 overflow-hidden sm:hidden"
-              >
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  placeholder="프로젝트 검색..."
-                  className="h-10 w-full rounded-xl border border-border/60 bg-muted/40 px-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/50 focus:border-primary/40 focus:bg-white"
-                  autoFocus
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           {/* Filter Tabs */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -367,6 +365,28 @@ export function PortfolioList({
             </div>
           </motion.div>
 
+          {/* Mobile search - below filter tabs */}
+          <AnimatePresence>
+            {searchOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden sm:hidden"
+              >
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  placeholder="프로젝트 검색..."
+                  className="mt-3 h-10 w-full rounded-full border border-border/60 bg-muted/40 px-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/50 focus:border-primary/40 focus:bg-white"
+                  autoFocus
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Bento Card Grid */}
           <AnimatePresence mode="wait">
             <motion.div
@@ -396,7 +416,6 @@ export function PortfolioList({
                 const s = item.size ?? 'default';
                 const isWide = s === 'large' || s === 'wide';
 
-                const colSpan = isWide ? 2 : 1;
                 const isTallImg = s === 'large' || s === 'tall';
                 const rowSpan = isTallImg ? 13 : 11;
 
@@ -413,10 +432,8 @@ export function PortfolioList({
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, margin: '-60px' }}
-                    style={{
-                      gridColumn: `span ${colSpan}`,
-                      gridRow: `span ${rowSpan}`,
-                    }}
+                    className={cn(isWide && 'sm:col-span-2')}
+                    style={{ gridRow: `span ${rowSpan}` }}
                   >
                     <Link
                       href={`/portfolio/${item.id}`}

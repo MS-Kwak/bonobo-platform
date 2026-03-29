@@ -33,12 +33,13 @@ interface PortfolioRow extends RowDataPacket {
   k08: number;
   k09: number;
   k10: number;
+  category: string | null;
 }
 
 const IMAGE_BASE_URL = 'https://bonobo.co.kr/admin/files/';
 
 const PORTFOLIO_COLUMNS =
-  'psn, pkind, regdate, pname, client_name, ptitle, pdesc, attack1, attack2, attack3, hit, himage, card_size, tech_stack, short_desc, features, k01, k02, k03, k04, k05, k06, k07, k08, k09, k10';
+  'psn, pkind, regdate, pname, client_name, ptitle, pdesc, attack1, attack2, attack3, hit, himage, card_size, tech_stack, short_desc, features, k01, k02, k03, k04, k05, k06, k07, k08, k09, k10, category';
 
 const CATEGORY_K_MAP: Record<
   Exclude<PortfolioCategory, 'all'>,
@@ -110,6 +111,13 @@ function getCategories(
 function getPrimaryCategory(
   row: PortfolioRow,
 ): Exclude<PortfolioCategory, 'all'> {
+  if (
+    row.category &&
+    ['web', 'app', 'program', 'ai'].includes(row.category)
+  ) {
+    return row.category as Exclude<PortfolioCategory, 'all'>;
+  }
+
   const cats = getCategories(row);
 
   if (cats.includes('ai')) return 'ai';
@@ -269,6 +277,15 @@ export async function getPortfolioById(
     [psn],
   );
   return rows[0] ? toPortfolioItem(rows[0], 0) : null;
+}
+
+export async function incrementPortfolioHit(
+  psn: number,
+): Promise<void> {
+  await pool.query(
+    'UPDATE PubNotice SET hit = hit + 1 WHERE psn = ?',
+    [psn],
+  );
 }
 
 export async function getRelatedPortfolioItems(

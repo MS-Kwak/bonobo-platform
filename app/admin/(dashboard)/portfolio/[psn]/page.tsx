@@ -29,7 +29,7 @@ export default async function AdminPortfolioEditPage({
     tech_stack: row.tech_stack ?? '',
     card_size: row.card_size ?? '',
     himage: row.himage ?? '',
-    category: '',
+    category: row.category ?? '',
     description: row.short_desc ?? '',
     features: row.features ?? '',
     k01: row.k01 ?? 0,

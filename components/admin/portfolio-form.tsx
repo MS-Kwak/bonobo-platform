@@ -63,30 +63,22 @@ const TECH_STACK_OPTIONS = [
   'TensorFlow',
   'WebSocket',
   'IoT',
+  'Excel 출력 (xlsx)',
+  'Chart.js',
+  'PDF 자동생성 (PDFKit)',
 ] as const;
 
-const K_FLAG_MAP: Record<string, string[]> = {
-  web: ['k05', 'k06', 'k07'],
-  app: ['k08'],
-  program: ['k01', 'k09', 'k10'],
-  ai: ['k02', 'k03', 'k04'],
-};
-
-const K_FLAG_OPTIONS: {
-  key: string;
-  label: string;
-  group: string;
-}[] = [
-  { key: 'k01', label: 'ERP', group: 'program' },
-  { key: 'k05', label: '매칭플랫폼', group: 'web' },
-  { key: 'k06', label: '쇼핑몰', group: 'web' },
-  { key: 'k07', label: '홈페이지', group: 'web' },
-  { key: 'k08', label: 'App', group: 'app' },
-  { key: 'k09', label: '응용프로그램', group: 'program' },
-  { key: 'k10', label: '정부지원사업', group: 'program' },
-  { key: 'k02', label: 'IoT', group: 'ai' },
-  { key: 'k03', label: '빅데이터', group: 'ai' },
-  { key: 'k04', label: '예측분석', group: 'ai' },
+const K_FLAG_OPTIONS = [
+  { key: 'k01', label: 'ERP' },
+  { key: 'k05', label: '매칭플랫폼' },
+  { key: 'k06', label: '쇼핑몰' },
+  { key: 'k07', label: '홈페이지' },
+  { key: 'k08', label: 'App' },
+  { key: 'k09', label: '응용프로그램' },
+  { key: 'k10', label: '정부지원사업' },
+  { key: 'k02', label: 'IoT' },
+  { key: 'k03', label: '빅데이터' },
+  { key: 'k04', label: '예측분석' },
 ];
 
 interface PortfolioFormData {
@@ -217,23 +209,14 @@ export function PortfolioForm({ initialData, isNew }: Props) {
   );
 
   function handleCategoryChange(cat: string) {
-    const reset: Record<string, number> = {};
-    for (let i = 1; i <= 10; i++)
-      reset[`k${String(i).padStart(2, '0')}`] = 0;
-    const defaultFlag = K_FLAG_MAP[cat]?.[0];
-    if (defaultFlag) reset[defaultFlag] = 1;
-    setForm((prev) => ({ ...prev, ...reset, category: cat }));
+    setForm((prev) => ({ ...prev, category: cat }));
   }
 
   function toggleKFlag(key: string) {
-    setForm((prev) => {
-      const updated = {
-        ...prev,
-        [key]: prev[key as keyof PortfolioFormData] === 1 ? 0 : 1,
-      };
-      updated.category = detectCategory(updated as PortfolioFormData);
-      return updated;
-    });
+    setForm((prev) => ({
+      ...prev,
+      [key]: prev[key as keyof PortfolioFormData] === 1 ? 0 : 1,
+    }));
   }
 
   function toggleTech(tech: string) {
@@ -340,12 +323,15 @@ export function PortfolioForm({ initialData, isNew }: Props) {
         ptitle: form.ptitle,
         pname: form.pname || '보노보플랫폼',
         client_name: form.client_name || null,
+        regdate:
+          form.regdate || new Date().toISOString().split('T')[0],
         pdesc: buildFinalPdesc(),
         short_desc: form.description || null,
         features: form.features || null,
         tech_stack: form.tech_stack || null,
         card_size: form.card_size || null,
         himage: form.himage || null,
+        category: form.category || 'web',
         k01: form.k01,
         k02: form.k02,
         k03: form.k03,
@@ -358,8 +344,6 @@ export function PortfolioForm({ initialData, isNew }: Props) {
         k10: form.k10,
       };
       if (isNew) {
-        payload.regdate =
-          form.regdate || new Date().toISOString().split('T')[0];
         payload.hit = 0;
         await fetch('/api/admin/portfolio', {
           method: 'POST',
@@ -373,8 +357,12 @@ export function PortfolioForm({ initialData, isNew }: Props) {
           body: JSON.stringify({ psn: form.psn, ...payload }),
         });
       }
-      router.push('/admin/portfolio');
-      router.refresh();
+      if (isNew) {
+        router.push('/admin/portfolio');
+        router.refresh();
+      } else {
+        router.back();
+      }
     } catch {
       setError('저장 중 오류가 발생했습니다.');
     } finally {
@@ -391,8 +379,7 @@ export function PortfolioForm({ initialData, isNew }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ psn: form.psn }),
       });
-      router.push('/admin/portfolio');
-      router.refresh();
+      router.back();
     } catch {
       setError('삭제 중 오류가 발생했습니다.');
     } finally {
@@ -572,9 +559,7 @@ export function PortfolioForm({ initialData, isNew }: Props) {
               })}
             </div>
             <p className="mt-2 text-[11px] text-muted-foreground/60">
-              선택한 구분에 따라 프론트 필터 카테고리가 자동
-              결정됩니다 (AI/Data &gt; App &gt; Program &gt; Web
-              우선순위)
+              카테고리와 세부 구분은 독립적으로 선택 가능합니다
             </p>
           </div>
         </section>

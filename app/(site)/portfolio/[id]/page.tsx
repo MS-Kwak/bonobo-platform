@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import {
   getPortfolioById,
   getRelatedPortfolioItems,
+  incrementPortfolioHit,
 } from '@/lib/api/portfolio';
 import { categories } from '@/data/portfolio';
 import { PortfolioDetail } from '@/components/portfolio/portfolio-detail';
@@ -36,6 +37,8 @@ export default async function PortfolioDetailPage({ params }: Props) {
 
   const item = await getPortfolioById(psn);
   if (!item) notFound();
+
+  await incrementPortfolioHit(psn);
 
   const categoryLabel =
     categories.find((c) => c.id === item.category)?.label ??
