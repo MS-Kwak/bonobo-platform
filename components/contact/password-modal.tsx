@@ -8,14 +8,21 @@ interface PasswordModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (password: string) => void;
+  error?: string;
+  loading?: boolean;
 }
 
 function PasswordForm({
   onClose,
   onConfirm,
-}: Pick<PasswordModalProps, 'onClose' | 'onConfirm'>) {
+  error: externalError,
+  loading,
+}: Pick<
+  PasswordModalProps,
+  'onClose' | 'onConfirm' | 'error' | 'loading'
+>) {
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(false);
+  const [localError, setLocalError] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -27,13 +34,15 @@ function PasswordForm({
     (e: React.FormEvent) => {
       e.preventDefault();
       if (!password.trim()) {
-        setError(true);
+        setLocalError(true);
         return;
       }
       onConfirm(password);
     },
     [password, onConfirm],
   );
+
+  const hasError = localError || !!externalError;
 
   return (
     <>
@@ -67,24 +76,24 @@ function PasswordForm({
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
-              setError(false);
+              setLocalError(false);
             }}
             placeholder="비밀번호"
             className={`w-full rounded-xl border bg-muted/30 px-4 py-3 text-sm outline-none transition-all placeholder:text-muted-foreground/40 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-              error
+              hasError
                 ? 'border-red-400 ring-2 ring-red-400/20'
                 : 'border-border'
             }`}
           />
           <AnimatePresence>
-            {error && (
+            {(localError || externalError) && (
               <motion.p
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 className="mt-1.5 text-xs text-red-500"
               >
-                비밀번호를 입력해주세요
+                {externalError || '비밀번호를 입력해주세요'}
               </motion.p>
             )}
           </AnimatePresence>
@@ -101,9 +110,10 @@ function PasswordForm({
           </button>
           <button
             type="submit"
-            className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-all hover:bg-primary/90"
+            disabled={loading}
+            className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-all hover:bg-primary/90 disabled:opacity-60"
           >
-            확인
+            {loading ? '확인 중...' : '확인'}
           </button>
         </div>
       </form>
@@ -115,6 +125,8 @@ export function PasswordModal({
   isOpen,
   onClose,
   onConfirm,
+  error,
+  loading,
 }: PasswordModalProps) {
   return (
     <AnimatePresence>
@@ -146,7 +158,12 @@ export function PasswordModal({
             }}
             className="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl"
           >
-            <PasswordForm onClose={onClose} onConfirm={onConfirm} />
+            <PasswordForm
+              onClose={onClose}
+              onConfirm={onConfirm}
+              error={error}
+              loading={loading}
+            />
           </motion.div>
         </motion.div>
       )}

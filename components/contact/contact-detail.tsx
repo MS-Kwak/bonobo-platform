@@ -19,7 +19,10 @@ import {
   User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ContactItem } from '@/data/contacts';
+import type {
+  ContactDetailItem,
+  ContactListItem,
+} from '@/lib/api/contacts';
 import { PasswordModal } from '@/components/contact/password-modal';
 
 const ease: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
@@ -33,9 +36,9 @@ function formatDate(dateStr: string) {
 }
 
 interface Props {
-  item: ContactItem;
-  prev: ContactItem | null;
-  next: ContactItem | null;
+  item: ContactDetailItem;
+  prev: ContactListItem | null;
+  next: ContactListItem | null;
 }
 
 export function ContactDetail({ item, prev, next }: Props) {
@@ -115,10 +118,12 @@ export function ContactDetail({ item, prev, next }: Props) {
                   <User className="size-3.5" strokeWidth={1.5} />
                   {item.author}
                 </span>
-                <span className="flex items-center gap-1.5">
-                  <Phone className="size-3.5" strokeWidth={1.5} />
-                  {item.phone}
-                </span>
+                {item.phone && (
+                  <span className="flex items-center gap-1.5">
+                    <Phone className="size-3.5" strokeWidth={1.5} />
+                    {item.phone}
+                  </span>
+                )}
                 <span className="flex items-center gap-1.5">
                   <CalendarDays
                     className="size-3.5"
@@ -291,10 +296,29 @@ export function ContactDetail({ item, prev, next }: Props) {
       <PasswordModal
         isOpen={deleteModal}
         onClose={() => setDeleteModal(false)}
-        onConfirm={() => {
-          setDeleteModal(false);
-          alert('삭제되었습니다. (DB 연동 후 실제 삭제)');
-          router.push('/contact');
+        onConfirm={async (password) => {
+          try {
+            const verifyRes = await fetch('/api/contact/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ qsn: item.id, password }),
+            });
+            const { valid } = await verifyRes.json();
+            if (!valid) {
+              alert('비밀번호가 일치하지 않습니다.');
+              return;
+            }
+            await fetch('/api/contact', {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ qsn: item.id, password }),
+            });
+            setDeleteModal(false);
+            router.push('/contact');
+            router.refresh();
+          } catch {
+            alert('삭제 중 오류가 발생했습니다.');
+          }
         }}
       />
     </>

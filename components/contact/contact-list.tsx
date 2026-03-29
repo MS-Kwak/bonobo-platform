@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   CalendarDays,
@@ -14,8 +15,8 @@ import {
   User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { contactItems } from '@/data/contacts';
 import { PasswordModal } from '@/components/contact/password-modal';
+import type { ContactListResult } from '@/lib/api/contacts';
 
 const ease: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
@@ -28,12 +29,41 @@ function formatDate(dateStr: string) {
   });
 }
 
-export function ContactList() {
-  const [passwordModalId, setPasswordModalId] = useState<
-    string | null
-  >(null);
+interface Props {
+  data: ContactListResult;
+}
 
-  const replied = contactItems.filter((c) => c.replied).length;
+export function ContactList({ data }: Props) {
+  const router = useRouter();
+  const [passwordModalId, setPasswordModalId] = useState<
+    number | null
+  >(null);
+  const [pwError, setPwError] = useState('');
+  const [verifying, setVerifying] = useState(false);
+
+  async function handlePasswordConfirm(password: string) {
+    if (!passwordModalId) return;
+    setVerifying(true);
+    setPwError('');
+    try {
+      const res = await fetch('/api/contact/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ qsn: passwordModalId, password }),
+      });
+      const result = await res.json();
+      if (result.valid) {
+        setPasswordModalId(null);
+        router.push(`/contact/${passwordModalId}`);
+      } else {
+        setPwError('비밀번호가 일치하지 않습니다.');
+      }
+    } catch {
+      setPwError('확인 중 오류가 발생했습니다.');
+    } finally {
+      setVerifying(false);
+    }
+  }
 
   return (
     <>
@@ -87,19 +117,19 @@ export function ContactList() {
                 {
                   icon: Send,
                   label: '총 문의',
-                  value: contactItems.length,
+                  value: data.totalCount,
                   chip: 'bg-amber-500/12 text-amber-700',
                 },
                 {
                   icon: CheckCircle2,
                   label: '답변완료',
-                  value: replied,
+                  value: data.repliedCount,
                   chip: 'bg-emerald-500/12 text-emerald-700',
                 },
                 {
                   icon: Clock,
                   label: '대기중',
-                  value: contactItems.length - replied,
+                  value: data.pendingCount,
                   chip: 'bg-orange-500/12 text-orange-600',
                 },
               ].map((stat, i) => (
@@ -145,7 +175,7 @@ export function ContactList() {
             <p className="text-sm text-muted-foreground">
               총{' '}
               <span className="font-heading font-bold text-foreground">
-                {contactItems.length}
+                {data.totalCount}
               </span>
               건의 문의
             </p>
@@ -160,7 +190,7 @@ export function ContactList() {
 
           {/* Cards */}
           <div className="space-y-3">
-            {contactItems.map((item, i) => (
+            {data.items.map((item, i) => (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, y: 24 }}
@@ -244,6 +274,29 @@ export function ContactList() {
             ))}
           </div>
 
+          {/* Pagination */}
+          {data.totalPages > 1 && (
+            <div className="mt-10 flex items-center justify-center gap-1">
+              {Array.from(
+                { length: data.totalPages },
+                (_, i) => i + 1,
+              ).map((p) => (
+                <Link
+                  key={p}
+                  href={`/contact?page=${p}`}
+                  className={cn(
+                    'flex size-9 items-center justify-center rounded-lg text-sm font-medium transition-colors',
+                    p === data.currentPage
+                      ? 'bg-primary text-white'
+                      : 'text-muted-foreground hover:bg-muted',
+                  )}
+                >
+                  {p}
+                </Link>
+              ))}
+            </div>
+          )}
+
           {/* Write button (bottom) */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -269,12 +322,13 @@ export function ContactList() {
       {/* Password Modal */}
       <PasswordModal
         isOpen={passwordModalId !== null}
-        onClose={() => setPasswordModalId(null)}
-        onConfirm={() => {
-          if (passwordModalId) {
-            window.location.href = `/contact/${passwordModalId}`;
-          }
+        onClose={() => {
+          setPasswordModalId(null);
+          setPwError('');
         }}
+        onConfirm={handlePasswordConfirm}
+        error={pwError}
+        loading={verifying}
       />
     </>
   );

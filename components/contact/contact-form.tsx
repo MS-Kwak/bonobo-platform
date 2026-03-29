@@ -1,20 +1,19 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   AlertCircle,
   ArrowLeft,
   CheckCircle2,
-  FileText,
   KeyRound,
-  List,
   MessageSquareText,
   Phone,
+  RefreshCw,
   RotateCcw,
   Send,
+  ShieldCheck,
   Type,
   User,
 } from 'lucide-react';
@@ -28,6 +27,7 @@ interface FormData {
   title: string;
   content: string;
   password: string;
+  captchaInput: string;
 }
 
 interface FormErrors {
@@ -36,25 +36,101 @@ interface FormErrors {
   title?: string;
   content?: string;
   password?: string;
+  captcha?: string;
+}
+
+function generateCaptchaText(): string {
+  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let result = '';
+  for (let i = 0; i < 5; i++) {
+    result += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return result;
+}
+
+function drawCaptcha(canvas: HTMLCanvasElement, text: string) {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  const w = canvas.width;
+  const h = canvas.height;
+
+  ctx.fillStyle = '#fbbf24';
+  ctx.fillRect(0, 0, w, h);
+
+  for (let i = 0; i < 30; i++) {
+    ctx.strokeStyle = `rgba(0,0,0,${Math.random() * 0.08})`;
+    ctx.beginPath();
+    ctx.moveTo(Math.random() * w, Math.random() * h);
+    ctx.lineTo(Math.random() * w, Math.random() * h);
+    ctx.stroke();
+  }
+
+  for (let i = 0; i < 60; i++) {
+    ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.15})`;
+    ctx.fillRect(Math.random() * w, Math.random() * h, 2, 2);
+  }
+
+  const fontSize = 28;
+  ctx.font = `bold ${fontSize}px monospace`;
+  ctx.textBaseline = 'middle';
+  const totalWidth = text.length * 22;
+  const startX = (w - totalWidth) / 2;
+
+  for (let i = 0; i < text.length; i++) {
+    const x = startX + i * 22;
+    const y = h / 2 + (Math.random() - 0.5) * 8;
+    const angle = (Math.random() - 0.5) * 0.3;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    const colors = [
+      '#1a1a2e',
+      '#16213e',
+      '#0f3460',
+      '#533483',
+      '#e94560',
+    ];
+    ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+    ctx.fillText(text[i], 0, 0);
+    ctx.restore();
+  }
 }
 
 export function ContactForm() {
-  const router = useRouter();
   const [form, setForm] = useState<FormData>({
     author: '',
     phone: '',
     title: '',
     content: '',
     password: '',
+    captchaInput: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [captchaText, setCaptchaText] = useState('');
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const refreshCaptcha = useCallback(() => {
+    const newText = generateCaptchaText();
+    setCaptchaText(newText);
+    if (canvasRef.current) drawCaptcha(canvasRef.current, newText);
+    setForm((prev) => ({ ...prev, captchaInput: '' }));
+    setErrors((prev) => ({ ...prev, captcha: undefined }));
+  }, []);
+
+  useEffect(() => {
+    refreshCaptcha();
+  }, [refreshCaptcha]);
 
   const update = (key: keyof FormData, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
-    if (errors[key])
+    if (key === 'captchaInput') {
+      if (errors.captcha)
+        setErrors((prev) => ({ ...prev, captcha: undefined }));
+    } else if (errors[key as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [key]: undefined }));
+    }
   };
 
   const validate = (): boolean => {
@@ -64,6 +140,12 @@ export function ContactForm() {
     if (!form.title.trim()) e.title = '제목을 입력해주세요';
     if (!form.content.trim()) e.content = '상세내역을 입력해주세요';
     if (!form.password.trim()) e.password = '비밀번호를 입력해주세요';
+    if (
+      !form.captchaInput.trim() ||
+      form.captchaInput.toUpperCase() !== captchaText.toUpperCase()
+    ) {
+      e.captcha = '보안 문자가 일치하지 않습니다';
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -72,8 +154,28 @@ export function ContactForm() {
     e.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setSubmitted(true);
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          writer: form.author,
+          tel: form.phone,
+          title: form.title,
+          content: form.content,
+          password: form.password,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      setSubmitted(true);
+    } catch {
+      setErrors({
+        captcha: '등록 중 오류가 발생했습니다. 다시 시도해주세요.',
+      });
+      refreshCaptcha();
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleReset = () => {
@@ -83,8 +185,10 @@ export function ContactForm() {
       title: '',
       content: '',
       password: '',
+      captchaInput: '',
     });
     setErrors({});
+    refreshCaptcha();
   };
 
   if (submitted) {
@@ -303,6 +407,49 @@ export function ContactForm() {
                   placeholder="비밀번호를 설정하세요"
                   className={inputClass(errors.password)}
                 />
+              </FormField>
+
+              {/* CAPTCHA */}
+              <FormField
+                label="자동등록방지"
+                required
+                error={errors.captcha}
+                icon={
+                  <ShieldCheck className="size-4" strokeWidth={1.5} />
+                }
+                hint="아래 이미지의 문자를 입력해주세요"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="overflow-hidden rounded-lg border border-border">
+                    <canvas
+                      ref={canvasRef}
+                      width={160}
+                      height={48}
+                      className="block"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={refreshCaptcha}
+                    className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    title="새로고침"
+                  >
+                    <RefreshCw className="size-4" strokeWidth={1.5} />
+                  </button>
+                  <input
+                    type="text"
+                    value={form.captchaInput}
+                    onChange={(e) =>
+                      update('captchaInput', e.target.value)
+                    }
+                    placeholder="문자를 입력하세요"
+                    className={cn(
+                      inputClass(errors.captcha),
+                      'flex-1',
+                    )}
+                    autoComplete="off"
+                  />
+                </div>
               </FormField>
 
               {/* Buttons */}

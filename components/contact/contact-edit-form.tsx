@@ -16,7 +16,17 @@ import {
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ContactItem } from '@/data/contacts';
+interface ContactItem {
+  id: string;
+  author: string;
+  phone: string;
+  title: string;
+  content: string;
+  date: string;
+  replied: boolean;
+  reply?: string;
+  replyDate?: string;
+}
 
 const ease: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
@@ -66,10 +76,29 @@ export function ContactEditForm({ item }: { item: ContactItem }) {
     e.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 600));
-    setSaved(true);
-    setSubmitting(false);
-    setTimeout(() => router.push(`/contact/${item.id}`), 1200);
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          qsn: Number(item.id),
+          writer: form.author,
+          tel: form.phone,
+          title: form.title,
+          content: form.content,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      setSaved(true);
+      setTimeout(() => {
+        router.push(`/contact/${item.id}`);
+        router.refresh();
+      }, 1200);
+    } catch {
+      setErrors({ title: '수정 중 오류가 발생했습니다.' });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
