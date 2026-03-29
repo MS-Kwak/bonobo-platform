@@ -28,6 +28,15 @@ interface NoticeRow extends RowDataPacket {
   is_pinned: number;
 }
 
+const LEGACY_IMAGE_BASE = 'https://bonobo.co.kr';
+
+function resolveLegacyPaths(html: string): string {
+  return html.replace(
+    /src=["'](\/admin\/files\/[^"']+)["']/gi,
+    (_, path) => `src="${LEGACY_IMAGE_BASE}${path}"`,
+  );
+}
+
 function toNoticeItem(row: NoticeRow): NoticeItem {
   const attachments = [row.attack1, row.attack2, row.attack3].filter(
     (a): a is string => !!a,
@@ -36,7 +45,7 @@ function toNoticeItem(row: NoticeRow): NoticeItem {
   return {
     id: row.psn,
     title: row.ptitle,
-    content: row.pdesc,
+    content: resolveLegacyPaths(row.pdesc),
     author: row.pname,
     date: new Date(row.regdate).toISOString().split('T')[0],
     views: row.hit ?? 0,
@@ -99,6 +108,13 @@ export async function getNoticeCount(): Promise<number> {
     'SELECT COUNT(*) as total FROM PubNotice WHERE pkind = 0',
   );
   return rows[0].total as number;
+}
+
+export async function incrementNoticeHit(psn: number): Promise<void> {
+  await pool.query(
+    'UPDATE PubNotice SET hit = hit + 1 WHERE psn = ? AND pkind = 0',
+    [psn],
+  );
 }
 
 export async function getAdjacentNotices(

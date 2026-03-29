@@ -1,6 +1,10 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getNoticeById, getAdjacentNotices } from '@/lib/api/notices';
+import {
+  getNoticeById,
+  getAdjacentNotices,
+  incrementNoticeHit,
+} from '@/lib/api/notices';
 import { NoticeDetail } from '@/components/notice/notice-detail';
 
 interface Props {
@@ -37,6 +41,8 @@ export default async function NoticeDetailPage({ params }: Props) {
 
   const item = await getNoticeById(psn);
   if (!item) notFound();
+
+  await incrementNoticeHit(psn);
 
   const { prev, next } = await getAdjacentNotices(psn);
 

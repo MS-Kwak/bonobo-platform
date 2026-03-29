@@ -128,6 +128,47 @@ export async function getAdminNoticeList(
   };
 }
 
+export async function getAdminNoticeById(psn: number) {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    'SELECT * FROM PubNotice WHERE psn = ? AND pkind = 0',
+    [psn],
+  );
+  return rows[0] ?? null;
+}
+
+export async function insertNotice(
+  data: Record<string, unknown>,
+): Promise<number> {
+  const fields = Object.keys(data);
+  const values = Object.values(data);
+  const placeholders = fields.map(() => '?').join(', ');
+  const [result] = await pool.query<ResultSetHeader>(
+    `INSERT INTO PubNotice (${fields.join(', ')}) VALUES (${placeholders})`,
+    values,
+  );
+  return result.insertId;
+}
+
+export async function updateNotice(
+  psn: number,
+  data: Record<string, unknown>,
+) {
+  const fields = Object.keys(data);
+  const values = Object.values(data);
+  const setClause = fields.map((f) => `${f} = ?`).join(', ');
+  await pool.query(
+    `UPDATE PubNotice SET ${setClause} WHERE psn = ? AND pkind = 0`,
+    [...values, psn],
+  );
+}
+
+export async function deleteNotice(psn: number) {
+  await pool.query(
+    'DELETE FROM PubNotice WHERE psn = ? AND pkind = 0',
+    [psn],
+  );
+}
+
 /* ───────── Contact (WebQA) CRUD ───────── */
 
 export async function getAdminContactList(
