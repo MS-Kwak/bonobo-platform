@@ -24,7 +24,7 @@ export async function generateMetadata({
   if (!item) return { title: '문의를 찾을 수 없습니다' };
 
   return {
-    title: `${item.title} — 견적문의 — 보노보플랫폼`,
+    title: `${item.title} — 견적문의 — (주)보노보플랫폼`,
     description: item.content.slice(0, 120),
   };
 }

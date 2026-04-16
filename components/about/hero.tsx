@@ -45,7 +45,7 @@ export function AboutHero() {
         >
           기술과 함께 성장하는
           <br />
-          소프트웨어 전문 기업
+          소프트웨어 개발 전문 기업
         </motion.h1>
         <motion.p
           variants={fadeUp}
@@ -56,7 +56,7 @@ export function AboutHero() {
         >
           1999년부터 고객의 비즈니스를 깊이 이해하고,
           <br className="hidden sm:block" />
-          함께 성장해온 보노보플랫폼을 소개합니다.
+          함께 성장해온 (주)보노보플랫폼을 소개합니다.
         </motion.p>
       </div>
     </section>

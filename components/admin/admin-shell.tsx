@@ -90,7 +90,7 @@ export function AdminShell({
           <Link href="/admin" className="flex items-center gap-2">
             <Image
               src="/images/bonobo-logo.png"
-              alt="보노보플랫폼"
+              alt="(주)보노보플랫폼"
               width={120}
               height={30}
               className="h-6 w-auto dark:invert"

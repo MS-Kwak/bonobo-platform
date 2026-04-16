@@ -121,7 +121,7 @@ function buildInitial(data?: PortfolioFormData): PortfolioFormData {
   return {
     pkind: 1,
     ptitle: '',
-    pname: '보노보플랫폼',
+    pname: '(주)보노보플랫폼',
     client_name: '',
     regdate: new Date().toISOString().split('T')[0],
     pdesc: '',
@@ -325,7 +325,7 @@ export function PortfolioForm({ initialData, isNew }: Props) {
       const payload: Record<string, unknown> = {
         pkind: form.pkind,
         ptitle: form.ptitle,
-        pname: form.pname || '보노보플랫폼',
+        pname: form.pname || '(주)보노보플랫폼',
         client_name: form.client_name || null,
         regdate:
           form.regdate || new Date().toISOString().split('T')[0],

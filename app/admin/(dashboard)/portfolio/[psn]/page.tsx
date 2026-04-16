@@ -20,7 +20,7 @@ export default async function AdminPortfolioEditPage({
     psn: row.psn,
     pkind: row.pkind,
     ptitle: row.ptitle ?? '',
-    pname: row.pname ?? '보노보플랫폼',
+    pname: row.pname ?? '(주)보노보플랫폼',
     client_name: row.client_name ?? '',
     regdate: row.regdate
       ? new Date(row.regdate).toISOString().split('T')[0]

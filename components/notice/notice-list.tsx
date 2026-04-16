@@ -152,7 +152,7 @@ export function NoticeList({
               transition={{ duration: 0.7, delay: 0.2, ease }}
               className="mt-4 max-w-lg text-base leading-relaxed text-white/60"
             >
-              보노보플랫폼의 최신 소식과 성과를 전해드립니다
+              (주)보노보플랫폼의 최신 소식과 성과를 전해드립니다
             </motion.p>
 
             {/* Stats chips */}

@@ -56,7 +56,7 @@ export function Header() {
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/images/bonobo-logo.png"
-            alt="보노보플랫폼"
+            alt="(주)보노보플랫폼"
             width={140}
             height={36}
             className="h-8 w-auto"

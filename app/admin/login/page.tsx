@@ -68,7 +68,7 @@ export default function AdminLoginPage() {
         <div className="mb-8 text-center">
           <Image
             src="/images/bonobo-logo.png"
-            alt="보노보플랫폼"
+            alt="(주)보노보플랫폼"
             width={160}
             height={40}
             className="mx-auto mb-6 h-9 w-auto dark:invert"
@@ -142,7 +142,7 @@ export default function AdminLoginPage() {
         </form>
 
         <p className="mt-6 text-center text-xs text-muted-foreground/60">
-          &copy; 보노보플랫폼
+          &copy; (주)보노보플랫폼
         </p>
       </div>
     </div>

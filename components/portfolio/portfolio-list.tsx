@@ -236,7 +236,7 @@ export function PortfolioList({
           >
             1999년부터{' '}
             <span className="font-heading font-bold text-foreground">
-              <AnimatedCount target={categoryCounts.all} />+
+              <AnimatedCount target={categoryCounts.all + 100} />+
             </span>
             &nbsp;의 프로젝트를 완성했습니다
           </motion.p>

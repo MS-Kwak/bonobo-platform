@@ -29,7 +29,7 @@ export async function generateMetadata({
     .trim();
 
   return {
-    title: `${item.title} — 보노보플랫폼 공지사항`,
+    title: `${item.title} — (주)보노보플랫폼 공지사항`,
     description: plainContent.slice(0, 160),
   };
 }

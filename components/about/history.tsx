@@ -287,7 +287,7 @@ const milestones: Milestone[] = [
     year: '1999~2001',
     icon: Terminal,
     events: [
-      '소프트빌 창업, DOS/Windows 기반 시스템 개발 시작',
+      '소프트빌 창업, IBM/Windows 기반 시스템 개발 시작',
       '인터넷 게시-전자상거래 웹사이트 구축',
       '국내 여행 포탈 사이트 구축',
       '토스 어학원 — 통합 관리 시스템 개발',

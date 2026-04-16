@@ -16,8 +16,8 @@ const values = [
   },
   {
     icon: Code2,
-    label: 'DOS to AI',
-    desc: 'DOS부터 인공지능까지 기술 진화와 함께',
+    label: 'IBM to AI',
+    desc: 'IBM부터 인공지능까지 기술 진화와 함께',
   },
   {
     icon: Users,
@@ -49,11 +49,11 @@ export function AboutIntro() {
         <FadeIn className="mt-8 max-w-3xl">
           <div className="space-y-5 text-base leading-relaxed text-muted-foreground">
             <p>
-              보노보플랫폼은 1999년 소프트빌에서 출발하여, 2006년
+              (주)보노보플랫폼은 1999년 소프트빌에서 출발하여, 2006년
               법인전환한 소프트웨어 개발 및 플랫폼 운영 회사입니다.
             </p>
             <p>
-              1980년대말 DOS 환경의 시스템 개발을 시작으로, 1990년대
+              1980년대말 IBM 환경의 시스템 개발을 시작으로, 1990년대
               Windows와 웹 기반 시스템 개발, 2000년 초반의 모바일
               환경, 그리고 현재 진행중인 인공지능까지 개발 솔루션과
               경험을 축적한 기업으로 안정적인 시스템 서비스를 제공하는
@@ -66,7 +66,7 @@ export function AboutIntro() {
               가치를 제시할 수 있어야 합니다.
             </p>
             <p className="font-semibold text-foreground">
-              보노보플랫폼은 항상 여러분의 파트너가 될 준비가 되어
+              (주)보노보플랫폼은 항상 여러분의 파트너가 될 준비가 되어
               있습니다.
             </p>
           </div>

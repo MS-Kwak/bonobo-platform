@@ -11,20 +11,21 @@ import { motion } from 'framer-motion';
 const areas = [
   {
     icon: '/images/tossface/laptop.svg',
-    title: 'Web / Mobile',
+    title: 'Web / App',
     items: [
-      '웹사이트, 모바일웹 구축',
+      '반응형 웹 사이트 구축',
       '하이브리드 웹앱 개발',
       'Android, iOS App 개발',
     ],
   },
   {
     icon: '/images/tossface/gear.svg',
-    title: 'Program',
+    title: 'ERP 및 IoT',
     items: [
       '응용 프로그램 개발',
-      'TCP/IP, RS232C 통신 제어',
-      'POS 및 프랜차이즈 시스템',
+      'BMS, 호텔객실통합관리',
+      'TCPIP, MQTT, RS232C통신',
+      '키오스크, POS 시스템',
     ],
   },
   {
@@ -38,8 +39,13 @@ const areas = [
   },
   {
     icon: '/images/tossface/rocket.svg',
-    title: 'Hosting',
-    items: ['웹호스팅 · DB호스팅', 'SMS 문자전송', '클라우드 인프라'],
+    title: 'AI / BigData',
+    items: [
+      'BigData기반 예측',
+      'LLM, RAG 개발',
+      'AI기반 쳇봇 개발',
+      '하네스 엔지니어링',
+    ],
   },
 ];
 
@@ -55,7 +61,7 @@ export function AboutBusiness() {
             사업 영역
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            DOS부터 BigData까지, 다양한 영역의 솔루션을 제공합니다
+            IBM부터 AI까지, 다양한 영역의 솔루션을 제공합니다
           </p>
         </FadeIn>
 

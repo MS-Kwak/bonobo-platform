@@ -17,7 +17,7 @@ export function Footer() {
           <div className="space-y-4">
             <Image
               src="/images/bonobo-logo-footer.png"
-              alt="보노보플랫폼"
+              alt="(주)보노보플랫폼"
               width={140}
               height={36}
               className="h-8 w-auto"

@@ -40,7 +40,7 @@ export function Intro() {
           <h2 className="text-3xl font-bold leading-snug tracking-tight text-foreground sm:text-4xl lg:text-[2.75rem]">
             사회적 가치를 기술로 실현하는 것,
             <br />
-            보노보플랫폼의 지향점입니다
+            (주)보노보플랫폼의 지향점입니다
           </h2>
           <p className="mt-6 text-lg leading-relaxed text-muted-foreground lg:text-xl">
             1999년 창립 이래, 우리는 단순히 코드를 작성하는 것이

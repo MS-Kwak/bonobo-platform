@@ -75,7 +75,7 @@ export default async function AdminDashboardPage() {
           대시보드
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          보노보플랫폼 관리 시스템
+          (주)보노보플랫폼 관리 시스템
         </p>
       </div>
 

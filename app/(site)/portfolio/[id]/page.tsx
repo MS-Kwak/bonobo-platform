@@ -25,7 +25,7 @@ export async function generateMetadata({
   if (!item) return { title: '프로젝트를 찾을 수 없습니다' };
 
   return {
-    title: `${item.title} — 보노보플랫폼 포트폴리오`,
+    title: `${item.title} — (주)보노보플랫폼 포트폴리오`,
     description: item.description,
   };
 }

@@ -18,7 +18,7 @@ export async function generateMetadata({
   const item = await getContactById(qsn);
   if (!item) return { title: '문의를 찾을 수 없습니다' };
   return {
-    title: `수정 — ${item.title} — 보노보플랫폼`,
+    title: `수정 — ${item.title} — (주)보노보플랫폼`,
   };
 }
 
