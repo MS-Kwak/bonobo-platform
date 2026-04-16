@@ -314,7 +314,11 @@ export function ContactForm() {
               </span>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form
+              onSubmit={handleSubmit}
+              autoComplete="off"
+              className="space-y-6"
+            >
               {/* Author + Phone */}
               <div className="grid gap-6 sm:grid-cols-2">
                 <FormField
@@ -405,6 +409,7 @@ export function ContactForm() {
                   value={form.password}
                   onChange={(e) => update('password', e.target.value)}
                   placeholder="비밀번호를 설정하세요"
+                  autoComplete="new-password"
                   className={inputClass(errors.password)}
                 />
               </FormField>
