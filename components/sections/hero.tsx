@@ -10,6 +10,7 @@ import {
   Rocket,
   Lightbulb,
   Handshake,
+  MapPin,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { buttonVariants } from '@/components/ui/button';
@@ -151,6 +152,18 @@ export function Hero() {
           >
             포트폴리오 보기
           </Link>
+          <a
+            href="https://mapstory.kr/보노보플랫폼"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              buttonVariants({ variant: 'outline', size: 'lg' }),
+              'w-full sm:w-auto px-6 h-12 text-base gap-2 border-foreground/20 bg-foreground/5 hover:bg-foreground/10',
+            )}
+          >
+            <MapPin className="size-4" />
+            개발 지도
+          </a>
         </motion.div>
 
         {/* B: Trust Badges */}
